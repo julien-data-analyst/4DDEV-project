@@ -3,7 +3,7 @@ Contexte requête HTTP.txt
 .env
 */.venv
 airflow/logs/
-airflow/dags/__pycache__
+airflow/*/__pycache__
 docker-compose-exemple.yml
 env.example
 dbt/logs

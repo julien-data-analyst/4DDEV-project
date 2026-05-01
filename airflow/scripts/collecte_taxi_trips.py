@@ -22,8 +22,7 @@ import json
 import logging
 import os
 from datetime import date, datetime
-from typing import Generator
-
+import time
 import boto3
 import requests
 from botocore.client import Config
@@ -68,11 +67,12 @@ def get_s3_client() -> boto3.client:
 #  Utilitaires
 # ─────────────────────────────────────────────────────────────────────────────
 
-def iter_months(start_year: int, start_month: int) -> Generator[date, None, None]:
-    """Génère chaque mois de start jusqu'au mois courant inclus."""
-    current = date(start_year, start_month, 1)
-    today = date.today().replace(day=1)
-    while current <= today:
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+def iter_months_range(start, end):
+    current = start
+    while current <= end:
         yield current
         current += relativedelta(months=1)
 
@@ -97,7 +97,7 @@ def file_exists_in_minio(s3: boto3.client, key: str) -> bool:
 
 def download_and_upload(s3: boto3.client, url: str, bucket: str, key: str) -> int:
     """
-    Télécharge un fichier en streaming HTTP et l'envoie directement dans Minio
+    Télécharge un fichier avec requête HTTP et l'envoie directement dans Minio
     via l'API multipart upload. Retourne la taille totale en octets.
     """
     log.info("Téléchargement → %s", url)
@@ -189,6 +189,8 @@ def write_metadata(s3: boto3.client, year: int, month: int, size_bytes: int) -> 
 def collect_taxi_batch(
     year_from: int = FIRST_YEAR,
     month_from: int = FIRST_MONTH,
+    year_to: int = None,
+    month_to: int = None,
     force: bool = False,
 ) -> dict:
     """
@@ -205,69 +207,42 @@ def collect_taxi_batch(
     s3 = get_s3_client()
     stats = {"downloaded": 0, "skipped": 0, "errors": 0, "total_bytes": 0}
 
-    for month_date in iter_months(year_from, month_from):
+    start = date(year_from, month_from, 1)
+    end = (
+        date(year_to, month_to, 1)
+        if year_to and month_to
+        else date.today().replace(day=1)
+    )
+
+    request_count = 0
+    for month_date in iter_months_range(start, end):
         year = month_date.year
         month = month_date.month
+
         key = s3_key(year, month)
         url = f"{BASE_URL}/yellow_tripdata_{year:04d}-{month:02d}.parquet"
 
+        if request_count >= 5 :
+            time.sleep(5)
+
         if not force and file_exists_in_minio(s3, key):
-            log.info("Déjà présent, ignoré : %s", key)
             stats["skipped"] += 1
             continue
 
         try:
+            request_count += 1
             size = download_and_upload(s3, url, BUCKET, key)
             if size > 0:
                 write_metadata(s3, year, month, size)
                 stats["downloaded"] += 1
                 stats["total_bytes"] += size
-        except Exception as exc:
-            log.error("Échec %04d-%02d : %s", year, month, exc)
+        except Exception:
             stats["errors"] += 1
 
-    log.info(
-        "Collecte terminée — téléchargés: %(downloaded)d, ignorés: %(skipped)d, "
-        "erreurs: %(errors)d, total: %(total_bytes).1f Mo" % {**stats, "total_bytes": stats["total_bytes"] / 1_048_576}
-    )
     return stats
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  DAG Airflow
-# ─────────────────────────────────────────────────────────────────────────────
 
-try:
-    from airflow import DAG
-    from airflow.operators.python import PythonOperator
-    from airflow.utils.dates import days_ago
-
-    default_args = {
-        "owner": "data-engineering",
-        "retries": 3,
-        "retry_delay": __import__("datetime").timedelta(minutes=10),
-        "email_on_failure": False,
-    }
-
-    with DAG(
-        dag_id="collecte_taxi_trips_batch",
-        description="Ingestion batch mensuelle des taxis jaunes NYC (2009 → maintenant)",
-        schedule_interval="0 3 1 * *",   # 1er de chaque mois à 3h UTC
-        start_date=days_ago(1),
-        catchup=False,
-        default_args=default_args,
-        tags=["ingestion", "batch", "taxi", "minio"],
-    ) as dag:
-
-        task_collect = PythonOperator(
-            task_id="telecharger_parquets_manquants",
-            python_callable=collect_taxi_batch,
-            op_kwargs={"year_from": FIRST_YEAR, "month_from": FIRST_MONTH, "force": False},
-        )
-
-except ImportError:
-    # Mode standalone (hors Airflow)
-    pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────

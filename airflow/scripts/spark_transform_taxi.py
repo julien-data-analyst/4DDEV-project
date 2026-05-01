@@ -18,6 +18,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Configuration
 # ─────────────────────────────────────────────────────────────────────────────
@@ -127,7 +128,6 @@ def transform_taxi(spark: SparkSession, year: int = None, month: int = None):
     count = df_clean.count()
     print(f"[PySpark] {count:,} trajets transformés → {OUTPUT_PATH}")
     return count
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Point d'entrée

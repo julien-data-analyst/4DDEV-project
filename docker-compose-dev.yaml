@@ -81,6 +81,7 @@ services:
       mc alias set local http://minio:9000 $${DATALAKE_USER} $${DATALAKE_PASSWORD};
       mc mb --ignore-existing local/raw-taxi;
       mc mb --ignore-existing local/raw-weather;
+      mc mb --ignore-existing local/raw-weather-fake;
       mc mb --ignore-existing local/processed;
       echo 'Buckets créés avec succès';
       exit 0;
