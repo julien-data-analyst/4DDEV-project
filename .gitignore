@@ -1,0 +1,9 @@
+Contexte requête HTTP.txt
+.env.local
+.env
+*/.venv
+airflow/logs/
+airflow/dags/__pycache__
+docker-compose-exemple.yml
+env.example
+dbt/logs

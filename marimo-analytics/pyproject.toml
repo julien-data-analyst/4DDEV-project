@@ -1,0 +1,16 @@
+[project]
+name = "marimo-analytics"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "marimo>=0.23.4",
+    "matplotlib>=3.10.9",
+    "pandas>=3.0.2",
+    "plotnine>=0.15.3",
+    "psycopg2-binary>=2.9.12",
+    "pyspark>=4.1.1",
+    "requests>=2.33.1",
+    "seaborn>=0.13.2",
+]
