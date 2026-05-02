@@ -26,7 +26,7 @@ from collecte_taxi_trips import collect_taxi_batch
 #     )
 
 def run_ingestion(): 
-    return collect_taxi_batch( year_from=2009, month_from=1, force=False )
+    return collect_taxi_batch( year_from=2025, month_from=1, force=False )
 
 
 with DAG(

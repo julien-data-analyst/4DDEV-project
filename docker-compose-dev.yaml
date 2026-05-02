@@ -62,8 +62,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '2.0'
+          memory: 2G
     networks:
       - data-net
 
@@ -81,7 +81,7 @@ services:
       mc alias set local http://minio:9000 $${DATALAKE_USER} $${DATALAKE_PASSWORD};
       mc mb --ignore-existing local/raw-taxi;
       mc mb --ignore-existing local/raw-weather;
-      mc mb --ignore-existing local/raw-weather-fake;
+      mc mb --ignore-existing local/raw-weather-faker;
       mc mb --ignore-existing local/processed;
       echo 'Buckets créés avec succès';
       exit 0;
@@ -124,7 +124,7 @@ services:
     build:
       context: ./marimo-analytics
     env_file:
-      - .env.local
+      - .env
     container_name: marimo-analytics
     command: marimo edit --no-token --host 0.0.0.0 -p 8080
     volumes:
@@ -134,6 +134,9 @@ services:
       - "8080:8080"
     stdin_open: true
     tty: true
+    networks:
+      - data-net
+
 
   # Service dbt (conteneur gardé allumé exprès pour lancer les différents modèles dbt)
   dbt:

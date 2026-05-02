@@ -37,8 +37,8 @@ BUCKET = "raw-taxi"
 PREFIX = "yellow_tripdata"
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minio_admin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minio_password_change_me")
+MINIO_ACCESS_KEY = os.getenv("DATALAKE_USER", "minio_admin")
+MINIO_SECRET_KEY = os.getenv("DATALAKE_PASSWORD", "minio_password_change_me")
 
 FIRST_YEAR = 2009
 FIRST_MONTH = 1
