@@ -1,44 +1,35 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
+from airflow.utils.dates import days_ago
+import os
 import sys
 
 sys.path.append("/opt/airflow/scripts")
 
 from collecte_taxi_trips import collect_taxi_batch
 
+FIRST_YEAR = 2009
+FIRST_MONTH = 1
 
-# def run_ingestion(**context):
-#     """
-#     Utilise la date du DAG run pour déterminer le mois à ingérer.
-#     """
-#     execution_date = context["logical_date"]
-
-#     year = 2013 #execution_date.year
-#     month = 12    #execution_date.month
-
-#     return collect_taxi_batch(
-#         year_from=year,
-#         month_from=month,
-#         year_to=year,
-#         month_to=month,
-#         force=False
-#     )
-
-def run_ingestion(): 
-    return collect_taxi_batch( year_from=2025, month_from=1, force=False )
-
-
+default_args = {
+        "owner": "airflow",
+        "retries": 3,
+        "retry_delay": __import__("datetime").timedelta(minutes=10),
+        "email_on_failure": False,
+    }
+ 
 with DAG(
-    dag_id="taxi_ingestion_minio",
-    start_date=datetime(2009, 1, 1),
-    schedule="@monthly",
-    catchup=True,
-    tags=["taxi", "ingestion", "minio"],
-) as dag:
-
-    ingest_task = PythonOperator(
-        task_id="collect_taxi_data",
-        python_callable=run_ingestion,
-        provide_context=True,
-    )
+        dag_id="collecte_taxi_trips_batch",
+        description="Ingestion batch mensuelle des taxis jaunes NYC (2009 → maintenant)",
+        schedule_interval="@monthly",   # 1er de chaque mois à 3h UTC
+        start_date=days_ago(1),
+        catchup=False,
+        default_args=default_args,
+        tags=["ingestion", "batch", "taxi", "minio"],
+    ) as dag:
+ 
+        task_collect = PythonOperator(
+            task_id="telecharger_parquets_manquants",
+            python_callable=collect_taxi_batch,
+            op_kwargs={"year_from": FIRST_YEAR, "month_from": FIRST_MONTH, "force": False},
+        )

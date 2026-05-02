@@ -2,7 +2,7 @@ x-airflow-common: &airflow-common
   image: apache/airflow:2.9.1-python3.11
   env_file:
     - .env
-  environment:
+  environment: 
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${AIRFLOW_DB}
@@ -13,7 +13,11 @@ x-airflow-common: &airflow-common
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     # Connexions Minio / S3
     AIRFLOW_CONN_MINIO_DEFAULT: s3://${DATALAKE_USER}:${DATALAKE_PASSWORD}@minio:9000
-    # Variables Airflow accessibles dans les DAGs
+
+    # Spark
+    SPARK_MASTER_URL: spark://spark-master:7077
+
+    # MinIO
     MINIO_ENDPOINT: http://minio:9000
     MINIO_ACCESS_KEY: ${DATALAKE_USER}
     MINIO_SECRET_KEY: ${DATALAKE_PASSWORD}
@@ -23,15 +27,18 @@ x-airflow-common: &airflow-common
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     SPARK_HOME: /opt/spark
     PYTHONPATH: /opt/airflow/dags:/opt/airflow/scripts
+
   volumes:
-    - ./airflow/dags:/opt/airflow/dags          # DAGs persistés en local
+    - spark_home:/opt/spark 
+    - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/scripts:/opt/airflow/scripts    # Scripts Python de collecte
+    - ./airflow/scripts:/opt/airflow/scripts
     - ./airflow/config:/opt/airflow/config
   depends_on:
     postgres:
       condition: service_healthy
+
   networks:
     - data-net
 
@@ -179,13 +186,7 @@ services:
     entrypoint: /bin/bash
     command:
       - -c
-      - |
-        pip install --no-cache-dir \
-          apache-airflow-providers-amazon \
-          apache-airflow-providers-postgres \
-          boto3 requests pyarrow pandas \
-          pyspark==3.5.1 \
-          kafka-python confluent-kafka 
+      - | 
         airflow db migrate
         airflow users create \
           --username ${AIRFLOW_ADMIN_USER:-admin} \
@@ -205,8 +206,7 @@ services:
   airflow-webserver:
     <<: *airflow-common
     container_name: airflow_webserver
-    command: >
-      bash -c "pip install --no-cache-dir apache-airflow-providers-amazon apache-airflow-providers-postgres boto3 requests pyarrow pandas pyspark==3.5.1 kafka-python confluent-kafka && airflow webserver"
+    command: airflow webserver
     ports:
       - "8082:8080"
     healthcheck:
@@ -215,6 +215,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    environment:
+      <<: *airflow-common-env
     depends_on:
       airflow-init:
         condition: service_completed_successfully
@@ -229,8 +231,9 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     container_name: airflow_scheduler
-    command: >
-      bash -c "pip install --no-cache-dir apache-airflow-providers-amazon apache-airflow-providers-postgres boto3 requests pyarrow pandas pyspark==3.5.1 kafka-python confluent-kafka && airflow scheduler"
+    command: airflow scheduler
+    environment:
+      <<: *airflow-common-env
     healthcheck:
       test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname $(hostname)"]
       interval: 30s
@@ -245,6 +248,41 @@ services:
         limits:
           cpus: '1.5'
           memory: 2G
+    networks:
+      - data-net
+
+  # ─────────────────────────────────────────────
+  #  SPARK (pour l'exécution des jobs spark sous AIRFLOW)
+  # ─────────────────────────────────────────────
+  spark-master:
+    image: apache/spark:3.5.1-scala2.12-java17-python3-r-ubuntu
+    container_name: spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    volumes:
+      - spark_home:/opt/spark  
+      - ./airflow/scripts:/opt/spark/scripts
+    ports:
+      - "7077:7077"   # cluster endpoint (IMPORTANT pour Airflow)
+      - "8084:8080"   # UI Spark
+    networks:
+      - data-net
+    
+  spark-worker:
+    image: apache/spark:3.5.1-scala2.12-java17-python3-r-ubuntu
+    container_name: spark-worker-1
+    depends_on:
+      - spark-master
+    volumes:
+      - ./airflow/scripts:/opt/spark/scripts
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    ports:
+      - "8081:8081"
     networks:
       - data-net
 
@@ -326,6 +364,7 @@ services:
 # ─────────────────────────────────────────────
 
 volumes:
+  spark_home:
   postgres_data:
   minio_data:
   kafka_data:

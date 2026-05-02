@@ -8,14 +8,7 @@
     {
       "id": "Hbol",
       "code_hash": "f3fa909ba78766da4f3a8d2c8d50a9c3",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
@@ -34,139 +27,362 @@
     {
       "id": "vblA",
       "code_hash": "c2731ee025c9fd1cbe584f8341337e31",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "bkHC",
       "code_hash": "1b30c1ff9cfe909ddfd842467862f1c6",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<pre class='text-xs'>&#x27;MINIO123&#x27;</pre>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "lEQa",
-      "code_hash": "727c906c84bb3b90fbf455af36239ae7",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stderr",
-          "text": "26/05/02 09:55:19 ERROR Inbox: Ignoring error\njava.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n26/05/02 09:55:19 WARN Executor: Issue communicating with driver in heartbeater\norg.apache.spark.SparkException: Exception thrown in awaitResult: \n\tat org.apache.spark.util.SparkThreadUtils$.awaitResult(SparkThreadUtils.scala:53)\n\tat org.apache.spark.util.ThreadUtils$.awaitResult(ThreadUtils.scala:359)\n\tat org.apache.spark.rpc.RpcTimeout.awaitResult(RpcTimeout.scala:75)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:101)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:85)\n\tat org.apache.spark.storage.BlockManagerMaster.registerBlockManager(BlockManagerMaster.scala:81)\n\tat org.apache.spark.storage.BlockManager.reregister(BlockManager.scala:674)\n\tat org.apache.spark.executor.Executor.reportHeartBeat(Executor.scala:1363)\n\tat org.apache.spark.executor.Executor.$anonfun$heartbeater$1(Executor.scala:356)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)\n\tat org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1941)\n\tat org.apache.spark.Heartbeater$$anon$1.run(Heartbeater.scala:46)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\t... 3 more\n26/05/02 09:55:29 ERROR Inbox: Ignoring error\njava.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n26/05/02 09:55:29 WARN Executor: Issue communicating with driver in heartbeater\norg.apache.spark.SparkException: Exception thrown in awaitResult: \n\tat org.apache.spark.util.SparkThreadUtils$.awaitResult(SparkThreadUtils.scala:53)\n\tat org.apache.spark.util.ThreadUtils$.awaitResult(ThreadUtils.scala:359)\n\tat org.apache.spark.rpc.RpcTimeout.awaitResult(RpcTimeout.scala:75)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:101)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:85)\n\tat org.apache.spark.storage.BlockManagerMaster.registerBlockManager(BlockManagerMaster.scala:81)\n\tat org.apache.spark.storage.BlockManager.reregister(BlockManager.scala:674)\n\tat org.apache.spark.executor.Executor.reportHeartBeat(Executor.scala:1363)\n\tat org.apache.spark.executor.Executor.$anonfun$heartbeater$1(Executor.scala:356)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)\n\tat org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1941)\n\tat org.apache.spark.Heartbeater$$anon$1.run(Heartbeater.scala:46)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\t... 3 more\n26/05/02 09:55:39 WARN Executor: Issue communicating with driver in heartbeater\norg.apache.spark.SparkException: Exception thrown in awaitResult: \n\tat org.apache.spark.util.SparkThreadUtils$.awaitResult(SparkThreadUtils.scala:53)\n\tat org.apache.spark.util.ThreadUtils$.awaitResult(ThreadUtils.scala:359)\n\tat org.apache.spark.rpc.RpcTimeout.awaitResult(RpcTimeout.scala:75)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:101)\n\tat org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:85)\n\tat org.apache.spark.storage.BlockManagerMaster.registerBlockManager(BlockManagerMaster.scala:81)\n\tat org.apache.spark.storage.BlockManager.reregister(BlockManager.scala:674)\n\tat org.apache.spark.executor.Executor.reportHeartBeat(Executor.scala:1363)\n\tat org.apache.spark.executor.Executor.$anonfun$heartbeater$1(Executor.scala:356)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)\n\tat org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1941)\n\tat org.apache.spark.Heartbeater$$anon$1.run(Heartbeater.scala:46)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\t... 3 more\n26/05/02 09:55:39 ERROR Inbox: Ignoring error\njava.lang.NullPointerException: Cannot invoke \"org.apache.spark.storage.BlockManagerId.executorId()\" because \"idWithoutTopologyInfo\" is null\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint.org$apache$spark$storage$BlockManagerMasterEndpoint$$register(BlockManagerMasterEndpoint.scala:696)\n\tat org.apache.spark.storage.BlockManagerMasterEndpoint$$anonfun$receiveAndReply$1.applyOrElse(BlockManagerMasterEndpoint.scala:141)\n\tat org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:104)\n\tat org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:216)\n\tat org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:101)\n\tat org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:76)\n\tat org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:42)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
-          "mimetype": "text/plain"
-        }
-      ]
+      "code_hash": "816e73d1409ba49835ef355210c478be",
+      "outputs": [],
+      "console": []
     },
     {
       "id": "PKri",
       "code_hash": "ed648d23c7588a6566914b9b14f5b75a",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<pre class='text-xs'>&#x27;minio&#x27;</pre>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "Xref",
       "code_hash": "39248fc5ab42742b2adb03c211b3a444",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "SFPL",
-      "code_hash": "1904c24f57d1d556c20a36c0933eb071",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "676c23db015c171055ec839400684cd3",
+      "outputs": [],
       "console": []
     },
     {
       "id": "BYtC",
       "code_hash": "790393ec9cd3867b1b157da142408840",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "4\n",
-          "mimetype": "text/plain"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "RGSE",
       "code_hash": "20423287306aa087e71859c807478ea0",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stderr",
-          "text": "\r[Stage 0:>                                                          (0 + 0) / 1]\r\r[Stage 0:>                                                          (0 + 1) / 1]\r\r                                                                                \r",
-          "mimetype": "text/plain"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "Kclp",
-      "code_hash": "aa1cfeb7303eb87af8d50169e32ea044",
+      "code_hash": "d61552d0e3cc41132f312a7e1ed6c1b2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "7bd57db1ff6e71de6216b2c7ea5f119d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "07443dca3aaa70fd0726b58e0a8d8285",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "d03ebd2ab0422863319a796a30ce0ee1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "cdde16d287715b681a0e25a06ae5dce0",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "10f81e2fd07a15afae735e76b8d96135",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "da52a9b6d562d57e3b1986680623e1fc",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "01f59fdf2aea1b664db11b877b977009",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "2544ad56fc953ef16097f9a56f8192bd",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "607559344dd03f2a2d5f1e15039a07ba",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "da3745ae1435bdd516e78cf5adfb0a19",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "56b7934651e2ca45bca4cc92d2ab217e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "75b23d7f465b6b502df12dd7bf9c44e9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "422a6873fca36e3c54f9856d3dc0476c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "66a1e5482e03e05dc0e50adb48d1faa8",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "63f0067c8d12c589c070a0f7062802c3",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/plain": ""
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Commentaire :</span>\n<span class=\"paragraph\">\u00c0 partir de janvier 2011 on observe un changement radical au niveau des noms de colonnes pour la localisation et le type de paiement.</span>\n<span class=\"paragraph\">On se concentrera sur une partie des donn\u00e9es (2024 \u00e0 2026) pour l'analyse et la cr\u00e9ation de la base de donn\u00e9es.</span></span>"
           }
         }
       ],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "d6461504e08b9469c2a12049b7a4645d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"transformation-des-donnees-pour-les-voyages-en-taxis\">Transformation des donn\u00e9es pour les voyages en taxis</h2>\n<ul>\n<li>Dur\u00e9e : tpep_pickup_datetime=datetime.datetime(2026, 1, 1, 0, 54, 4) et tpep_dropoff_datetime=datetime.datetime(2026, 1, 1, 0, 59, 37)</li>\n<li>tranche de distance : trip_distance=0.97 (miles) 1 km = 0,621371 miles</li>\n</ul>\n<span class=\"paragraph\">0\u20132 km, 2\u20135 km, &gt;5 km</span>\n<ul>\n<li>Type de paiement : Table de correspondance</li>\n</ul>\n<span class=\"paragraph\">A numeric code signifying how the passenger paid for the trip.\n0 = Flex Fare trip\n1 = Credit card\n2 = Cash\n3 = No charge\n4 = Dispute\n5 = Unknown\n6 = Voided trip</span>\n<ul>\n<li>Pourcentage de pourboire : tip_amount / fare_amount</li>\n<li>Heure de prise en charge, jour de la semaine (tpep_pickup_datetime)</li>\n<li>PULocationID / DOLocationID : utilisation de la table zone CSV pour indiquer les diff\u00e9rentes informations de la zone</li>\n</ul>\n<span class=\"paragraph\">\"LocationID\",\"Borough\",\"Zone\",\"service_zone\"</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "ac1b7e5572082ace4e43adea138041b3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"selection-des-colonnes-dans-ce-fichier-parquet\">S\u00e9lection des colonnes dans ce fichier parquet</h3>\n<span class=\"paragraph\">Virer colonnes suivantes :</span>\n<ul>\n<li>VendorID</li>\n<li>RatecodeID</li>\n<li>store_and_fwd_flag</li>\n<li>mta_tax</li>\n<li>extra</li>\n<li>improvement_surcharge</li>\n<li>airport_fee</li>\n<li>congestion_surcharge</li>\n<li>cbd_congestion_fee</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "103142f17b15c63c1e9772e4684de978",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "pHFh",
+      "code_hash": "3eb165dc28282539639a8d7472852d05",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "513aba408a2c57b075e93959d5e4ab4a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "6e8d1e620a60f65436147deb00721ee5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"filtrage-des-donnees-pour-nen-garder-ceux-qui-nont-pas-de-donnees-nulles\">Filtrage des donn\u00e9es pour n'en garder ceux qui n'ont pas de donn\u00e9es nulles :</h3>\n<ul>\n<li>tpep_pickup_datetime</li>\n<li>tpep_dropoff_datetime</li>\n<li>passenger_count</li>\n<li>trip_distance</li>\n<li>tip_amount</li>\n<li>fare_amount</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "9eeec9e18dca64e189fc7e393712c633",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TXez",
+      "code_hash": "6e5eef1c15fed1f9cc0831afbe335c8e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dNNg",
+      "code_hash": "673b515b378b2904b8559e5e08c10edb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"ajout-des-nouvelles-colonnes-calculees-sous-spark\">Ajout des nouvelles colonnes calcul\u00e9es sous Spark</h3></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "yCnT",
+      "code_hash": "0a9387d155a5bd675ff02256227d223b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wlCL",
+      "code_hash": "b062af3d5dc3bac052e291ac072f31cf",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "kqZH",
+      "code_hash": "30fd43c83153cbbda5de9c2ab63e2b6e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wAgl",
+      "code_hash": "4868226f825e5a49446572e244ec0f81",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "rEll",
+      "code_hash": "4ea00eff920aad45819942635e8d0aa6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dGlV",
+      "code_hash": "1a42d3ea8835956ed5bd6cc151468a39",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SdmI",
+      "code_hash": "7538f14455bd6166a4921ce75d6810ea",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"insertion-des-donnees-dans-la-table-des-faits-fact_taxi_trips\">Insertion des donn\u00e9es dans la table des faits \"fact_taxi_trips\"</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lgWD",
+      "code_hash": "8ce2b8f9b2df1e9c2a590931a5dd4143",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "yOPj",
+      "code_hash": "70c409dc11c87be849428b25c1e76977",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "fwwy",
+      "code_hash": "793bc8899dc4f16d500b61de29ece551",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "LJZf",
+      "code_hash": "ab937c40c1fb2ba917c336d380b18bbd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"observation-des-donnees-pour-la-meteo-extract-et-ajout-colonnes\">Observation des donn\u00e9es pour la m\u00e9t\u00e9o (extract et ajout colonnes)</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "urSm",
+      "code_hash": "4d49f0e1b6808e0c9fed68f8d7d975ff",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "jxvo",
+      "code_hash": "c6dc8ed51bf16f5b8774665362a3514b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "mWxS",
+      "code_hash": "c47e79088ef068f12838e6daca7ec917",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "CcZR",
+      "code_hash": "f485c744fcf3017435acad73920d242c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "YWSi",
+      "code_hash": "b8834361145d8287eba76ecd280dceac",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "zlud",
+      "code_hash": "c472477e01d17c67235219fd5c70ff66",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "tZnO",
+      "code_hash": "d03ebd2ab0422863319a796a30ce0ee1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xvXZ",
+      "code_hash": "b3f553d428e93cad1ff7abcdb07b97a1",
+      "outputs": [],
       "console": []
     }
   ]

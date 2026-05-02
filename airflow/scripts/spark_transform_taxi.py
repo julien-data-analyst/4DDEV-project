@@ -1,147 +1,175 @@
-"""
-spark_transform_taxi.py
-=======================
-Transformation PySpark BATCH – Taxis jaunes NYC.
-
-Lit les Parquets bruts depuis Minio (raw-taxi),
-applique les transformations métier et écrit dans Minio (processed)
-partitionné par année/mois.
-
-À lancer depuis un DAG Airflow via SparkSubmitOperator ou BashOperator.
-"""
-
 from __future__ import annotations
 
 import os
-import sys
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql.types import DoubleType, IntegerType
+from pyspark.sql import SparkSession, functions as F
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Configuration
-# ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# ENV (une seule lecture)
+# ─────────────────────────────────────────────
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000").replace("http://", "")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minio_admin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minio_password_change_me")
+MINIO_ACCESS_KEY = os.getenv("DATALAKE_USER", "minio_admin")
+MINIO_SECRET_KEY = os.getenv("DATALAKE_PASSWORD", "minio_password_change_me")
 
-INPUT_PATH = "s3a://raw-taxi/yellow_tripdata/*/*/*/*.parquet"
-OUTPUT_PATH = "s3a://processed/taxi_trips_cleaned"
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+
+JDBC_URL = "jdbc:postgresql://postgres:5432/data_warehouse"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Session Spark avec connecteur Minio (S3A)
-# ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# SPARK SESSION FACTORY
+# ─────────────────────────────────────────────
 
-def create_spark_session() -> SparkSession:
+def create_spark_session():
     return (
         SparkSession.builder
         .appName("taxi-trips-batch-transform")
+
+        # S3 / MINIO
         .config("spark.hadoop.fs.s3a.endpoint", f"http://{MINIO_ENDPOINT}")
         .config("spark.hadoop.fs.s3a.access.key", MINIO_ACCESS_KEY)
         .config("spark.hadoop.fs.s3a.secret.key", MINIO_SECRET_KEY)
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
-        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
-        # Packages Hadoop AWS (inclus dans l'image Spark ou à fournir)
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider",
+                "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+
+        # perf
+        .config("spark.hadoop.fs.s3a.connection.maximum", "200")
+
+        # jars
+        .config("spark.jars", "/opt/airflow/scripts/postgresql-42.7.3.jar")
+        .config(
+            "spark.jars.packages",
+            "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262"
+        )
         .getOrCreate()
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Transformations métier
-# ─────────────────────────────────────────────────────────────────────────────
+from dateutil.relativedelta import relativedelta
+from datetime import date
 
-def transform_taxi(spark: SparkSession, year: int = None, month: int = None):
-    """
-    Lit et transforme les données de taxis jaunes.
 
-    Args:
-        year, month : si fournis, filtre sur une partition précise.
-                      Sinon traite toute la plage disponible.
-    """
-    path = (
-        f"s3a://raw-taxi/yellow_tripdata/{year:04d}/{month:02d}/*.parquet"
-        if year and month
-        else INPUT_PATH
+def iter_months(year_from, year_to):
+    current = date(year_from, 1, 1)
+    end = date(year_to, 12, 1)
+
+    while current <= end:
+        yield current.year, current.month
+        current += relativedelta(months=1)
+
+# ─────────────────────────────────────────────
+# CORE TRANSFORM
+# ─────────────────────────────────────────────
+
+def build_paths(year_from, year_to):
+    return [
+        f"s3a://raw-taxi/yellow_tripdata/{y:04d}/{m:02d}/*.parquet"
+        for y, m in iter_months(year_from, year_to)
+    ]
+
+
+def run_taxi_transform(year_from: int, year_to: int):
+    spark = create_spark_session()
+
+    paths = build_paths(year_from, year_to)
+
+    df = spark.read.parquet(*paths)
+    
+    df_selected = df.select(
+        F.col("tpep_dropoff_datetime").alias("dropoff_datetime"),
+        F.col("tpep_pickup_datetime").alias("pickup_datetime"),
+        "passenger_count",
+        (F.col("trip_distance") / 0.621371).alias("trip_distance_km"),
+        "PULocationID",
+        "DOLocationID",
+        "payment_type",
+        "fare_amount",
+        "tip_amount",
+        "tolls_amount",
+        "total_amount"
     )
 
-    df = spark.read.parquet(path)
-
-    df_clean = (
-        df
-        # Renommage pour homogénéité (les colonnes varient selon les années)
-        .withColumnRenamed("tpep_pickup_datetime", "pickup_dt")
-        .withColumnRenamed("tpep_dropoff_datetime", "dropoff_dt")
-        .withColumnRenamed("passenger_count", "passengers")
-        .withColumnRenamed("trip_distance", "distance_miles")
-        .withColumnRenamed("fare_amount", "fare_usd")
-        .withColumnRenamed("tip_amount", "tip_usd")
-        .withColumnRenamed("total_amount", "total_usd")
-        .withColumnRenamed("PULocationID", "pickup_location_id")
-        .withColumnRenamed("DOLocationID", "dropoff_location_id")
-
-        # Typage
-        .withColumn("passengers", F.col("passengers").cast(IntegerType()))
-        .withColumn("distance_miles", F.col("distance_miles").cast(DoubleType()))
-        .withColumn("fare_usd", F.col("fare_usd").cast(DoubleType()))
-        .withColumn("tip_usd", F.col("tip_usd").cast(DoubleType()))
-        .withColumn("total_usd", F.col("total_usd").cast(DoubleType()))
-
-        # Colonnes dérivées
-        .withColumn("trip_duration_min",
-                    (F.unix_timestamp("dropoff_dt") - F.unix_timestamp("pickup_dt")) / 60)
-        .withColumn("speed_mph",
-                    F.when(F.col("trip_duration_min") > 0,
-                           F.col("distance_miles") / (F.col("trip_duration_min") / 60))
-                    .otherwise(None))
-        .withColumn("pickup_hour", F.hour("pickup_dt"))
-        .withColumn("pickup_dow", F.dayofweek("pickup_dt"))
-        .withColumn("pickup_year", F.year("pickup_dt"))
-        .withColumn("pickup_month", F.month("pickup_dt"))
-
-        # Filtres qualité
-        .filter(F.col("distance_miles") > 0)
-        .filter(F.col("fare_usd") > 0)
-        .filter(F.col("total_usd") > 0)
-        .filter(F.col("passengers").between(1, 8))
-        .filter(F.col("trip_duration_min").between(1, 180))
-        .filter(F.col("speed_mph") < 200)
-
-        # Colonne de partitionnement
-        .withColumn("year", F.col("pickup_year"))
-        .withColumn("month", F.col("pickup_month"))
+    df_filtered = (
+        df_selected
+        .filter(F.col("trip_distance_km") > 0)
+        .filter(F.col("total_amount") > 0)
+        .filter(F.col("passenger_count") > 0)
+        .dropna(subset=["dropoff_datetime", "pickup_datetime"])
     )
 
-    # Écriture partitionnée
-    (
-        df_clean
-        .write
-        .mode("overwrite")
-        .partitionBy("year", "month")
-        .parquet(OUTPUT_PATH)
+    # zones depuis MINIO
+    df_zone = spark.read.csv(
+        "s3a://raw-taxi/zone/taxi_zone_lookup.csv",
+        header=True
     )
 
-    count = df_clean.count()
-    print(f"[PySpark] {count:,} trajets transformés → {OUTPUT_PATH}")
-    return count
+    df_features = (
+        df_filtered
+        .withColumn("pickup_dow", F.dayofweek("pickup_datetime"))
+        .withColumn("pickup_hour", F.hour("pickup_datetime"))
+        .withColumn("pickup_date", F.to_date("pickup_datetime"))
+        .withColumn(
+            "trip_duration_min",
+            (F.unix_timestamp("dropoff_datetime") -
+             F.unix_timestamp("pickup_datetime")) / 60
+        )
+        .withColumn(
+            "tranche_trip_distance_km",
+            F.when(F.col("trip_distance_km") <= 2, "0-2 km")
+             .when(F.col("trip_distance_km") <= 5, "2-5 km")
+             .otherwise(">5 km")
+        )
+        .withColumn(
+            "payment_type_str",
+            F.when(F.col("payment_type") == 1, "Credit card")
+             .when(F.col("payment_type") == 2, "Cash")
+             .otherwise("Other")
+        )
+        .drop("payment_type")
+        .withColumn(
+            "prct_pourboire",
+            F.expr("try_divide(tip_amount, fare_amount)")
+        )
+    )
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Point d'entrée
-# ─────────────────────────────────────────────────────────────────────────────
+    # JOIN PU
+    df_joined = (
+        df_features
+        .join(df_zone, df_features.PULocationID == df_zone.LocationID, "left")
+        .drop("LocationID", "PULocationID")
+        .withColumnRenamed("Borough", "PUBorough")
+        .withColumnRenamed("Zone", "PUZone")
+        .withColumnRenamed("service_zone", "PU_service_zone")
+    )
+
+    # JOIN DO
+    df_joined = (
+        df_joined
+        .join(df_zone, df_joined.DOLocationID == df_zone.LocationID, "left")
+        .drop("LocationID", "DOLocationID")
+        .withColumnRenamed("Borough", "DOBorough")
+        .withColumnRenamed("Zone", "DOZone")
+        .withColumnRenamed("service_zone", "DO_service_zone")
+    )
+
+    # WRITE POSTGRES (OVERWRITE TABLE)
+    df_joined.write \
+        .format("jdbc") \
+        .option("url", JDBC_URL) \
+        .option("dbtable", "public.fact_taxi_trips") \
+        .option("user", POSTGRES_USER) \
+        .option("password", POSTGRES_PASSWORD) \
+        .option("driver", "org.postgresql.Driver") \
+        .mode("overwrite") \
+        .option("truncate", "true") \
+        .save()
+
+    spark.stop()
+
 
 if __name__ == "__main__":
-    # Arguments optionnels : year month
-    year = int(sys.argv[1]) if len(sys.argv) > 1 else None
-    month = int(sys.argv[2]) if len(sys.argv) > 2 else None
-
-    spark = create_spark_session()
-    spark.sparkContext.setLogLevel("WARN")
-
-    try:
-        transform_taxi(spark, year=year, month=month)
-    finally:
-        spark.stop()
+    run_taxi_transform(2025, 2026)
