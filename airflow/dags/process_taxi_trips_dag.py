@@ -18,31 +18,29 @@ with DAG(
 ) as dag:
 
     run_spark = BashOperator(
-        task_id="transform_taxi",
-        bash_command="""
-        /opt/spark/bin/spark-submit \
-          --master spark://spark-master:7077 \
-          --jars /opt/airflow/scripts/postgresql-42.7.3.jar \
-          --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262 \
-          --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000 \
-          --conf spark.hadoop.fs.s3a.path.style.access=true \
-          --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
-          --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
-          --conf spark.hadoop.fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider \
-          --conf spark.hadoop.fs.s3a.access.key=$DATALAKE_USER \
-          --conf spark.hadoop.fs.s3a.secret.key=$DATALAKE_PASSWORD \
-          /opt/spark/scripts/spark_transform_taxi.py \
-          2025 2026
-        """,
-        # On passe les variables d'env du conteneur directement,
-        # sans passer par le système de Variables Airflow
-        env={
-            "DATALAKE_USER":      os.environ["DATALAKE_USER"],
-            "DATALAKE_PASSWORD":  os.environ["DATALAKE_PASSWORD"],
-            "POSTGRES_USER":      os.environ["POSTGRES_USER"],
-            "POSTGRES_PASSWORD":  os.environ["POSTGRES_PASSWORD"],
-            # PATH hérité pour que spark-submit soit trouvé
-            "PATH":               os.environ.get("PATH", ""),
-            "JAVA_HOME":          os.environ.get("JAVA_HOME", ""),
-        },
-    )
+    task_id="transform_taxi",
+    bash_command="""
+    /opt/spark/bin/spark-submit \
+      --master spark://spark-master:7077 \
+      --jars /opt/spark/scripts/postgresql-42.7.3.jar,/opt/spark/scripts/hadoop-aws-3.3.4.jar,/opt/spark/scripts/aws-java-sdk-bundle-1.12.262.jar \
+      --conf spark.executor.extraClassPath=/opt/spark/scripts/hadoop-aws-3.3.4.jar:/opt/spark/scripts/aws-java-sdk-bundle-1.12.262.jar:/opt/spark/scripts/postgresql-42.7.3.jar \
+      --conf spark.driver.extraClassPath=/opt/spark/scripts/hadoop-aws-3.3.4.jar:/opt/spark/scripts/aws-java-sdk-bundle-1.12.262.jar:/opt/spark/scripts/postgresql-42.7.3.jar \
+      --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000 \
+      --conf spark.hadoop.fs.s3a.path.style.access=true \
+      --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
+      --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+      --conf spark.hadoop.fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider \
+      --conf spark.hadoop.fs.s3a.access.key=$DATALAKE_USER \
+      --conf spark.hadoop.fs.s3a.secret.key=$DATALAKE_PASSWORD \
+      /opt/spark/scripts/spark_transform_taxi.py \
+      2026 2026 2>&1
+    """,
+    env={
+        "DATALAKE_USER":     os.environ["DATALAKE_USER"],
+        "DATALAKE_PASSWORD": os.environ["DATALAKE_PASSWORD"],
+        "POSTGRES_USER":     os.environ["POSTGRES_USER"],
+        "POSTGRES_PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "PATH":              os.environ.get("PATH", ""),
+        "JAVA_HOME":         "/usr/lib/jvm/java-17-openjdk-amd64",
+    },
+)

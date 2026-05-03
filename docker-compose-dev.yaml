@@ -1,5 +1,7 @@
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.9.1-python3.11
+  build:
+      context: ./airflow
+  #image: apache/airflow:2.9.1-python3.11
   env_file:
     - .env
   environment: 
@@ -35,6 +37,7 @@ x-airflow-common: &airflow-common
     - ./airflow/plugins:/opt/airflow/plugins
     - ./airflow/scripts:/opt/airflow/scripts
     - ./airflow/config:/opt/airflow/config
+    - ./airflow/scripts:/opt/spark/scripts
   depends_on:
     postgres:
       condition: service_healthy
