@@ -4,7 +4,7 @@ spark_streaming_transform_weather.py
 PySpark Structured Streaming – Surveillance des buckets météo Minio.
 
 Surveille en continu :
-  - s3a://raw-weather/weather_events/    (données réelles)
+  - s3a://raw-weather/weather/    (données réelles)
   - s3a://raw-weather-faker/weather-fake/ (données fictives)
 
 Correction appliquée : les JARs hadoop-aws et aws-java-sdk-bundle sont
@@ -38,7 +38,7 @@ POSTGRES_USER     = os.getenv("POSTGRES_USER",     "dwh_user")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "dwh_password")
 JDBC_URL          = "jdbc:postgresql://postgres:5432/data_warehouse"
 
-PATH_REAL   = "s3a://raw-weather/weather_events/"
+PATH_REAL   = "s3a://raw-weather/weather/"
 PATH_FAKER  = "s3a://raw-weather-faker/weather-fake/"
 
 CHECKPOINT_REAL  = "s3a://processed/checkpoints/weather_real/"
