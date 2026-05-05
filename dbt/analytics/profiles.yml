@@ -1,0 +1,14 @@
+analytics:
+
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: postgres
+      password: POSTGRES123
+      port: 5432
+      dbname: data_warehouse
+      schema: public
+      threads: 1
+
+  target: dev

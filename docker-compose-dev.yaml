@@ -159,7 +159,7 @@ services:
       - ./dbt:/dbt                        # Projet dbt persisté en local
       - ./dbt/profiles:/root/.dbt         # profiles.yml persisté en local
     environment:
-      DBT_PROFILES_DIR: /root/.dbt
+      DBT_PROFILES_DIR: /dbt/analytics
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER}
