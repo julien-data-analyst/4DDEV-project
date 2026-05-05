@@ -6,14 +6,8 @@ WHERE NOT EXISTS (
     SELECT FROM pg_database WHERE datname = 'airflow'
 )\gexec
 
--- Création base analytics
-SELECT 'CREATE DATABASE analytics OWNER ' || current_user
-WHERE NOT EXISTS (
-    SELECT FROM pg_database WHERE datname = 'analytics'
-)\gexec
-
 -- Schémas pour le DWH analytics
-\c analytics
+\c data_warehouse
 
 CREATE SCHEMA IF NOT EXISTS marts;
 

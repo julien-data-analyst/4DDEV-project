@@ -168,7 +168,7 @@ with DAG(
     dag_id="weather_streaming_pipeline",
     description="Génère des données météo fictives puis lance le job Spark Streaming.",
     schedule_interval="@hourly",
-    start_date=datetime(2025, 1, 1),
+    start_date=datetime(2026, 1, 1),
     catchup=False,
     default_args=default_args,
     tags=["streaming", "weather", "spark", "minio"],

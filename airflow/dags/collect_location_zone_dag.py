@@ -88,7 +88,7 @@ default_args = {
 with DAG(
     dag_id="collect_taxi_zone_lookup",
     default_args=default_args,
-    start_date=datetime(2024, 1, 1),
+    start_date=datetime(2026, 1, 1),
     schedule_interval="@once",
     catchup=False,
     tags=["taxi", "minio", "reference-data"],

@@ -12,7 +12,7 @@ default_args = {
 with DAG(
     dag_id="taxi_trips_spark_batch",
     default_args=default_args,
-    start_date=datetime(2025, 1, 1),
+    start_date=datetime(2026, 1, 1),
     schedule="@monthly",
     catchup=False,
 ) as dag:

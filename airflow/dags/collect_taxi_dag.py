@@ -8,7 +8,7 @@ sys.path.append("/opt/airflow/scripts")
 
 from collecte_taxi_trips import collect_taxi_batch
 
-FIRST_YEAR = 2009
+FIRST_YEAR = 2026
 FIRST_MONTH = 1
 
 default_args = {
@@ -20,7 +20,7 @@ default_args = {
  
 with DAG(
         dag_id="collecte_taxi_trips_batch",
-        description="Ingestion batch mensuelle des taxis jaunes NYC (2009 → maintenant)",
+        description="Ingestion batch mensuelle des taxis jaunes NYC (2026 → maintenant)",
         schedule_interval="@monthly",   # 1er de chaque mois à 3h UTC
         start_date=days_ago(1),
         catchup=False,

@@ -1,6 +1,6 @@
 -- Active: 1776860365260@@127.0.0.1@5434@data_warehouse
 ##############################################
-# Création des tables du Data Warehouse
+# Création des tables du Data Warehouse (dans la base data_warehouse)
 ##############################################
 
 DROP TABLE IF EXISTS public.fact_taxi_trips;
@@ -44,7 +44,6 @@ CREATE TABLE public.dim_weather (
     measure_hour INT,
     fictif BOOLEAN
 );
-
 ##############################################
 # La création d'index sur les colonnes qu'on va utiliser le plus souvent
 ##############################################
@@ -62,8 +61,27 @@ CREATE INDEX idx_puzone ON public.fact_taxi_trips (puzone);
 
 CREATE INDEX idx_dozone ON public.fact_taxi_trips (dozone);
 
+CREATE INDEX idx_measure_hour ON public.dim_weather (measure_hour);
+
+CREATE INDEX idx_measure_dow ON public.dim_weather (measure_dow);
+
+CREATE INDEX idx_measure_fictif ON public.dim_weather (fictif);
 
 # Regarder les index créés
 SELECT indexname, indexdef
 FROM pg_indexes
 WHERE schemaname = 'public';
+
+# Vérifier relation 
+SELECT w.id_weather, t.id_taxi, t.pickup_date, w.date_measure FROM public.fact_taxi_trips t
+INNER JOIN dim_weather w
+ON t.pickup_date = w.date_measure
+AND t.pickup_hour = w.measure_hour;
+
+-- Export CSV pour gérer plus facilement les parties DBT
+COPY public.dim_weather TO '/tmp/dim_weather.csv' WITH CSV HEADER;
+-- docker cp postgres_dwh:/tmp/dim_weather.csv ./tmp
+
+COPY (SELECT t.* FROM public.fact_taxi_trips AS t INNER JOIN dim_weather w ON t.pickup_date = w.date_measure AND t.pickup_hour = w.measure_hour)  
+TO '/tmp/fact_taxi_trips.csv' WITH CSV HEADER;
+-- docker cp postgres_dwh:/tmp/fact_taxi_trips.csv ./tmp

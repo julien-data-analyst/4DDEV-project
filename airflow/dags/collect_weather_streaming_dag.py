@@ -13,7 +13,7 @@ from collecte_api_weather import run_weather_to_minio
 
 with DAG(
         dag_id="weather_streaming_ingestion_minio",
-        start_date=datetime(2024, 1, 1),
+        start_date=datetime(2026, 1, 1),
         schedule="@hourly",
         catchup=False,
         default_args={

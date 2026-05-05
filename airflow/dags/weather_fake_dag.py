@@ -89,7 +89,7 @@ def store_minio(event):
 # ─────────────────────────────────────────────
 
 def run_fake_weather():
-    start = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     end = datetime(2026, 4, 30, tzinfo=timezone.utc)
 
     current = start
@@ -111,7 +111,7 @@ def run_fake_weather():
 
 with DAG(
     dag_id="weather_fake_generator_minio",
-    start_date=datetime(2025, 1, 1),
+    start_date=datetime(2026, 1, 1),
     catchup=False,
     schedule_interval="@once",
     default_args={"retries": 1, "retry_delay": timedelta(minutes=5)},
