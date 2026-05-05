@@ -16,3 +16,9 @@ USER airflow
 
 # S'assurer que le PATH local de airflow est bien inclus
 ENV PATH="/home/airflow/.local/bin:${PATH}"
+
+# COPY du code
+COPY dags/ /opt/airflow/dags/
+COPY scripts/ /opt/airflow/scripts/
+COPY config/ /opt/airflow/config/
+COPY plugins/ /opt/airflow/plugins/

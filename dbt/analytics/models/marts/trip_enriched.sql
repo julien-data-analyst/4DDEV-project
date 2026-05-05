@@ -1,4 +1,7 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='incremental'
+    schema='marts'
+) }}
 SELECT DISTINCT
     t.id_taxi,
     t.pickup_datetime,
@@ -11,6 +14,9 @@ SELECT DISTINCT
     t.payment_type_str,
     w.weather_description,
     w.weather_main
-FROM {{ ref('source_fact_taxi_trips') }} t
-LEFT JOIN {{ ref('source_dim_weather') }} w
+FROM {{ source('public', 'fact_taxi_trips') }} t
+LEFT JOIN {{ source('public', 'dim_weather') }} w
     ON t.pickup_date = w.date_measure
+{% if is_incremental() %}
+WHERE t.pickup_datetime > (SELECT MAX(t.pickup_datetime) FROM {{ this }})
+{% endif %}

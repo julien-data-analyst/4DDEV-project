@@ -72,7 +72,7 @@ def store_minio(event):
     ts = datetime.fromtimestamp(event["timestamp_unix"], tz=timezone.utc)
 
     key = (
-        f"weather-fake/{ts.year:04d}/{ts.month:02d}/"
+        f"weather-fake/{ts.year:04d}/{ts.month:02d}/{ts.day:02d}/"
         f"{CITY_ID}_{event['timestamp_unix']}.json"
     )
 

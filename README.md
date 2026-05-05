@@ -55,6 +55,11 @@ Weather : Nettoyage et création de colonnes calculées. Insertion dans la base 
 
 # Partie 3 : modèles dbt pour l'analytics
 
+18:37:00  1 of 3 OK created sql table model marts.high_value_customers ................... [SELECT 8 in 26.33s]
+18:37:00  2 of 3 START sql table model marts.trip_enriched ............................... [RUN]
+18:43:40  2 of 3 OK created sql table model marts.trip_enriched .......................... [SELECT 19324381 in 399.82s]
+18:43:40  3 of 3 START sql table model marts.trip_summary_per_hour ....................... [RUN]
+18:44:12  3 of 3 OK created sql table model marts.trip_summary_per_hour .................. [SELECT 96 in 31.68s]
 
 # Partie 4 : analyse par notebook marimo des visuels sur les tables analytiques
 

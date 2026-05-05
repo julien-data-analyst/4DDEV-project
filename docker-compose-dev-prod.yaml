@@ -32,12 +32,6 @@ x-airflow-common: &airflow-common
 
   volumes:
     - spark_home:/opt/spark 
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/logs:/opt/airflow/logs
-    - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/scripts:/opt/airflow/scripts
-    - ./airflow/config:/opt/airflow/config
-    - ./airflow/scripts:/opt/spark/scripts
   depends_on:
     postgres:
       condition: service_healthy
@@ -227,7 +221,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 1G
+          memory: 1Go
     networks:
       - data-net
 
@@ -267,7 +261,6 @@ services:
       - SPARK_NO_DAEMONIZE=true
     volumes:
       - spark_home:/opt/spark  
-      - ./airflow/scripts:/opt/spark/scripts
     ports:
       - "7077:7077"   # cluster endpoint (IMPORTANT pour Airflow)
       - "8084:8080"   # UI Spark
@@ -285,8 +278,6 @@ services:
     container_name: spark-worker-1
     depends_on:
       - spark-master
-    volumes:
-      - ./airflow/scripts:/opt/spark/scripts
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:

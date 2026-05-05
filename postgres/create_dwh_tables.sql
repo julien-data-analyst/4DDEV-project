@@ -79,9 +79,9 @@ ON t.pickup_date = w.date_measure
 AND t.pickup_hour = w.measure_hour;
 
 -- Export CSV pour gérer plus facilement les parties DBT
-COPY public.dim_weather TO '/tmp/dim_weather.csv' WITH CSV HEADER;
--- docker cp postgres_dwh:/tmp/dim_weather.csv ./tmp
+-- COPY public.dim_weather TO '/tmp/dim_weather.csv' WITH CSV HEADER;
+-- -- docker cp postgres_dwh:/tmp/dim_weather.csv ./tmp
 
-COPY (SELECT t.* FROM public.fact_taxi_trips AS t INNER JOIN dim_weather w ON t.pickup_date = w.date_measure AND t.pickup_hour = w.measure_hour)  
-TO '/tmp/fact_taxi_trips.csv' WITH CSV HEADER;
--- docker cp postgres_dwh:/tmp/fact_taxi_trips.csv ./tmp
+-- COPY (SELECT t.* FROM public.fact_taxi_trips AS t INNER JOIN dim_weather w ON t.pickup_date = w.date_measure AND t.pickup_hour = w.measure_hour)  
+-- TO '/tmp/fact_taxi_trips.csv' WITH CSV HEADER;
+-- -- docker cp postgres_dwh:/tmp/fact_taxi_trips.csv ./tmp
