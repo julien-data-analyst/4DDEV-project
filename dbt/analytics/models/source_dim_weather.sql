@@ -1,3 +1,4 @@
+{{ config(materialized='table') }}
 select id_weather,
 humidity_pct,
 temp_celsius,
