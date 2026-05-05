@@ -3,12 +3,12 @@ analytics:
   outputs:
     dev:
       type: postgres
-      host: postgres
+      host: localhost
       user: postgres
       password: POSTGRES123
-      port: 5432
+      port: 5434
       dbname: data_warehouse
-      schema: public
+      schema: mart
       threads: 1
 
   target: dev

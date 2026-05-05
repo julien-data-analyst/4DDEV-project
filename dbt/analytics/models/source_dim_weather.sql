@@ -1,0 +1,11 @@
+select id_weather,
+humidity_pct,
+temp_celsius,
+datetime_measure,
+date_measure,
+weather_description,
+weather_main,
+wind_speed_ms,
+measure_dow,
+measure_hour,
+fictif FROM {{ source('public', 'dim_weather') }}
