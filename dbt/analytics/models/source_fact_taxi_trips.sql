@@ -2,6 +2,8 @@ select
     id_taxi,
     pickup_datetime,
     pickup_hour,
+    pickup_date,
+    trip_duration_min,
     trip_distance_km,
     fare_amount,
     tip_amount,

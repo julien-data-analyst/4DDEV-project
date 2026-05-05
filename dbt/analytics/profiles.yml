@@ -1,14 +1,15 @@
+
 analytics:
 
   outputs:
     dev:
       type: postgres
-      host: localhost
+      host: postgres
       user: postgres
       password: POSTGRES123
-      port: 5434
+      port: 5432
       dbname: data_warehouse
-      schema: mart
+      schema: public
       threads: 1
 
   target: dev
