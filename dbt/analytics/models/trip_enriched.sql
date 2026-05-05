@@ -1,0 +1,16 @@
+{{ config(materialized='table') }}
+SELECT DISTINCT
+    t.id_taxi,
+    t.pickup_datetime,
+    t.pickup_date,
+    t.pickup_hour,
+    t.trip_distance_km,
+    t.fare_amount,
+    t.tip_amount,
+    t.prct_pourboire,
+    t.payment_type_str,
+    w.weather_description,
+    w.weather_main
+FROM {{ ref('source_fact_taxi_trips') }} t
+LEFT JOIN {{ ref('source_dim_weather') }} w
+    ON t.pickup_date = w.date_measure
