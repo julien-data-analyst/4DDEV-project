@@ -4,7 +4,53 @@
 ### Spécialité : Ingénierie Data
 ### Date : 01/05/2026 - 05/06/2026
 
-# Pour lancer la phase dev
+# Introduction
+
+Dans le cadre du projet, nous devions construire une architecture data pour la collecte et l'analyse des voyages de taxis à New York City et la météo associée.
+
+Pour présenter ce projet, nous allons d'abord vous présenter les technologies utilisées, ensuite les pré-requis pour pouvoir lancer l'architecture et pour finir ceux que nous avons faits pour chaque partie.
+
+# Technologies utilisées  (Installation/Déploiement)
+
+Pour mener à bien ce projet, plusieurs technologies ont dû être utilisées notamment :
+
+- **python** : langage de programmation
+- **Airflow** : orchestrateur de nos DAGs avec 
+- **Spark/Spark Streaming** : outil pour la transformation de données volumineuses
+- **PostgreSQL** : base de données permettant l'insertion et le traitement de JSON très simplement pour un gros volume de données
+- **Marimo** : Notebook python permettant de faire une analyse exploratoire sur nos données
+- **Docker** : technologie pour faciliter le déploiement de notre projet
+
+# Pré-requis pour l'utilisation de l'architecture
+
+Pour pouvoir faire fonctionner architecture, nous demandons que Docker Desktop ou équivalent soit installée et configurée avec ces configurations :
+
+- autoriser au moins 4 CPU à utiliser pour **Docker** afin que *Airflow* lance facilement ses DAGs créés
+- autoriser au moins 3 Go de mémoire pour **Docker** afin que la mémoire ne soit pas dépassée
+
+Si vous avez installé **Docker**, vous pouvez passer à la suite de cette documentation.
+
+# Utilisation de l'architecture
+
+Pour utiliser notre architecture sans le *hot reload*, vous devez utiliser le **docker-compose-dev-prod.yaml**. Pour ce faire, vous devez utiliser les commandes ci-dessous :
+
+```sh
+
+# Le lancer pour la première fois
+docker compose --env-file .env -f docker-compose-dev-prod.yaml up -d --build
+
+# l'arrêter
+docker compose -f docker-compose-dev-prod.yaml down
+
+# Avec suppression des volumes
+docker compose -f docker-compose-dev-prod.yaml down -v
+
+# Relancer les conteneurs
+docker compose --env-file .env -f docker-compose-dev-prod.yaml up
+
+```
+
+Si vous voules le lancer avec le hot reaload dev, vous devez utiliser **docker-compose-dev.yaml** :
 
 ```sh
 
@@ -22,17 +68,7 @@ docker compose --env-file .env -f docker-compose-dev.yaml up
 
 ```
 
-Ca peut prendre pas mal de temps (10 à 15 minutes le temps de build et de démarrer le serveur d'airflow notamment).
-
-Les autres conteneurs devraient être accesible rapidements.
-
-Les inits sert pouvoir bien initialiser nos différents buckets/packages qu'on a besoin.
-
-Marimo servira de notebook à la place de Jupyter qui est beaucoup trop complexe à configurer sous docker.
-
-dbt sera dans un conteneur séparé pour créer les différents modèles. 
-
-Il faudra donc se connecter au terminal du conteneur et tester les modèles dbt dans ce conteneur directement.
+Si vous téléchargez la première fois les images, cela peut prendre pas mal de temps (10 à 15 minutes le temps de build et de démarrer le serveur d'airflow/minio proprement). Ensuite vous pourrez explorer le travail réalisé en suivant les différentes parties documentées ci-dessous. 
 
 # Partie 1 : collecte des données
 
