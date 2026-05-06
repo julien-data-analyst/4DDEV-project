@@ -131,8 +131,6 @@ services:
       - .env
     container_name: marimo-analytics
     command: marimo edit --no-token --host 0.0.0.0 -p 8080
-    volumes:
-      - ./marimo-analytics/scripts:/code/scripts
     working_dir: /code
     ports:
       - "${MARIMO_ANALYTICS_PORT}:8080"
@@ -149,9 +147,6 @@ services:
     env_file:
       - .env
     working_dir: /dbt
-    volumes:
-      - ./dbt:/dbt                        # Projet dbt persisté en local
-      - ./dbt/profiles:/root/.dbt         # profiles.yml persisté en local
     environment:
       DBT_PROFILES_DIR: /dbt/analytics
       POSTGRES_HOST: postgres
@@ -221,7 +216,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 1Go
+          memory: 1G
     networks:
       - data-net
 

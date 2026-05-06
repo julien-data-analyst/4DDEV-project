@@ -1,7 +1,7 @@
-# Sujet : Plateforme de gestion d'un réseau social pour sportifs
+# Sujet : Gestion d'une architecture pour gérer les voyages de taxis et la météo associée
 ## Auteur : Julien RENOULT
 ## Promo : PGE4 Spécialité Data
-### *Date : 13/03/2026-23/03/2026*
+### *Date : 01/05/2026-06/05/2026*
 
 # Services [Marimo](https://marimo.io/)
 

@@ -3,16 +3,14 @@ from airflow.operators.bash import BashOperator
 from datetime import datetime
 
 with DAG(
-    dag_id="weather_streaming_to_parquet",
+    dag_id="weather_parquet_to_postgres",
     start_date=datetime(2026, 1, 1),
     schedule_interval="@hourly",
     catchup=False
 ) as dag:
 
-    run_stream = BashOperator(
-        task_id="run_streaming",
+    load_to_db = BashOperator(
+        task_id="load_parquet_to_postgres",
         bash_command="""
 /opt/spark/bin/spark-submit \
-/opt/spark/scripts/spark_streaming_transform_weather_parquet.py
-"""
-    )
+/opt/spark/scripts/spark_weather_bdd.py""")

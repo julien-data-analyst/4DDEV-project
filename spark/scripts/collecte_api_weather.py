@@ -10,6 +10,23 @@ import boto3
 import requests
 from botocore.client import Config
 
+"""
+collecte_api_weather.py
+======================
+DAG Airflow – Collecte des données météos depuis l'API
+
+Source  : https://d37ci6vzurychx.cloudfront.net/trip-data/
+Format  : JSON
+Cible   : Minio → bucket "raw-taxi" → yellow_tripdata/YYYY/MM/
+Plage   : 2026-01 → mois courant
+
+Logique :
+  - On interroge Minio pour savoir quels fichiers sont déjà présents.
+  - On ne télécharge que les fichiers manquants (idempotent).
+  - Chaque fichier est streamé par blocs pour limiter la mémoire.
+  - Un fichier _metadata.json est écrit à côté de chaque Parquet.
+"""
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
