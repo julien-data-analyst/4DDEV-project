@@ -146,6 +146,7 @@ Les pipelines sont exécutés automatiquement via Airflow afin d’assurer :
 - la reprise sur erreur.
 
 L’ensemble de l’architecture est conteneurisé avec `Docker-Compose` pour faciliter le déploiement et la reproductibilité du projet.
+
 # Partie 2 : transformation des données (DAGs Airflow pyspark)
 
 La seconde étape de l’architecture consiste à transformer les données brutes stockées dans MinIO afin de produire des données exploitables pour l’analyse et la modélisation analytique.

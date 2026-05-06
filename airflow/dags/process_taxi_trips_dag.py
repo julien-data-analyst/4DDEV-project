@@ -15,6 +15,7 @@ with DAG(
     start_date=datetime(2026, 1, 1),
     schedule="@monthly",
     catchup=False,
+    tags=["trips", "minio", "transform", 'load', 'postgresql'],
 ) as dag:
 
     run_spark = BashOperator(

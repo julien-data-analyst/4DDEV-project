@@ -1,3 +1,18 @@
+"""
+collecte_taxi_trips.py
+======================
+DAG Airflow – Collecte toutes les heures d'une mesure de météo à NYC
+
+Source  : https://api.openweathermap.org/data/2.5/weather
+Format  : JSON
+Cible   : Minio → bucket "raw-weather" → raw-weather/weather/YYYY/MM/DD
+Plage   : 2026-01 → mois courant
+
+Logique :
+  - On interroge notre API pour récupérer la mesure
+  - On extrait les informations nécessaires du JSON et on l'enregistre dans le bucket Minio
+"""
+
 from __future__ import annotations
 
 import json
