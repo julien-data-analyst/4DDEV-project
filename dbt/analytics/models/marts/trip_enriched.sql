@@ -7,7 +7,7 @@ SELECT DISTINCT
     t.pickup_datetime,
     t.pickup_date,
     t.pickup_hour,
-    t.trip_distance_km,
+    t.tranche_trip_distance_km,
     t.fare_amount,
     t.tip_amount,
     t.prct_pourboire,
