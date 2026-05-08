@@ -11,7 +11,7 @@ def _(mo):
     ## Auteur : Julien RENOULT - Tom JOUSSET - Béatrice BEAVOGUI - Mamadou-alpha DIALLO
     ## Promo : SUPINFO Programme Grande École 4ème année
     ### Spécialité : Ingénierie Data
-    ### Date : 01/05/2026 - 05/06/2026
+    ### Date : 01/05/2026 - 08/06/2026
 
     Dans ce notebook, vous trouverez les réponses aux questions posées dans le projet sur notamment :
 
@@ -37,7 +37,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Initialisation de la session Spark
+    # Initialisation de la connexion à la base de données PostgreSQL
     """)
     return
 
@@ -45,48 +45,41 @@ def _(mo):
 @app.cell
 def _():
     import marimo as mo
-    from pyspark.sql import SparkSession
-    from pyspark.sql import functions as F
     import pandas as pd
     import os
     import plotnine as plt
+    from sqlalchemy import create_engine
 
-    return F, SparkSession, mo, os, plt
+    return create_engine, mo, os, pd, plt
 
 
 @app.cell
 def _(os):
-    # Variables pour la connexion à la base de données
-    jdbc_url = "jdbc:postgresql://postgres:5432/data_warehouse"
-
+    # Propriétés de la connexion à la bdd
     connection_properties = {
         "user": os.getenv("POSTGRES_USER"),
         "password": os.getenv("POSTGRES_PASSWORD"),
-        "driver": "org.postgresql.Driver"
+        "db" : os.getenv("POSTGRES_DB"),
+        "port" : 5432,
+        "host" : "postgres"
     }
-    return connection_properties, jdbc_url
+    return (connection_properties,)
 
 
 @app.cell
-def _(SparkSession):
-    # Configuration de la session (peut prendre quelques minutes à s'initialiser)
-    spark = (
-        SparkSession.builder
-        .appName("analysis_c")
-        # ─────────────────────────────────────
-        # PARQUET / READING PERF
-        # ─────────────────────────────────────
-        .config("spark.sql.files.maxPartitionBytes", "128m")
-        .config("spark.sql.files.openCostInBytes", "4m")
-        .config("spark.hadoop.fs.s3a.experimental.input.fadvise", "sequential")
-
-        # ─────────────────────────────────────
-        # HADOOP AWS LIBS
-        # ─────────────────────────────────────
-        .config("spark.jars", "/code/scripts/postgresql-42.7.3.jar")
-        .getOrCreate()
+def _(connection_properties):
+    # URL SQLAlchemy avec psycopg2
+    DATABASE_URL = (
+        f"postgresql+psycopg2://{connection_properties['user']}:{connection_properties['password']}@{connection_properties['host']}:{connection_properties['port']}/{connection_properties['db']}"
     )
-    return (spark,)
+    return (DATABASE_URL,)
+
+
+@app.cell
+def _(DATABASE_URL, create_engine):
+    # Création du moteur SQLAlchemy
+    engine = create_engine(DATABASE_URL)
+    return (engine,)
 
 
 @app.cell(hide_code=True)
@@ -109,7 +102,6 @@ def _(mo):
 def _():
     # Requête pour calculer la distribution des durées de trajets
     query = """
-    (
     WITH 
     stats AS (
         SELECT
@@ -129,48 +121,31 @@ def _():
         bucket,
         nb,
         nb::float / SUM(nb) OVER () AS density
-    FROM hist
-    ) AS q
+    FROM hist;
     """
     return (query,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query, spark):
+def _(engine, pd, query):
     # Exécution de la requête
-    df_trajets = spark.read.jdbc(
-        url=jdbc_url,
-        table=query,
-        properties=connection_properties
-    )
+    df_trajets = pd.read_sql(query, engine)
     return (df_trajets,)
 
 
 @app.cell
 def _(df_trajets):
     # Vérification de l'exécution 
-    df_trajets.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_trajets.columns), "/", df_trajets.count())
+    print(df_trajets.dtypes)
+    print("Nombre de lignes/colonnes DataFrame : ", df_trajets.shape)
     df_trajets.head(5)
     return
 
 
 @app.cell
-def _(df_trajets):
-    df_pd_trajets = df_trajets.toPandas()
-    return (df_pd_trajets,)
-
-
-@app.cell
-def _(df_pd_trajets):
-    df_pd_trajets
-    return
-
-
-@app.cell
-def _(df_pd_trajets, plt):
+def _(df_trajets, plt):
     (
-        plt.ggplot(df_pd_trajets, plt.aes(x="bucket", y="nb"))
+        plt.ggplot(df_trajets, plt.aes(x="bucket", y="nb"))
         + plt.geom_bar(stat="identity")
         + plt.scale_y_log10()
         + plt.labs(
@@ -201,7 +176,6 @@ def _(mo):
 def _():
     # Requête pour calculer la distribution des trajets selon la tranche définie au-dessus
     query_tranche_duree = """
-    (
         SELECT
         CASE
             WHEN trip_duration_min < 20 THEN '0-20 min'
@@ -214,26 +188,21 @@ def _():
         WHERE trip_duration_min IS NOT NULL
         GROUP BY tranche_duree
         ORDER BY tranche_duree
-    ) AS q
     """
     return (query_tranche_duree,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_tranche_duree, spark):
+def _(engine, pd, query_tranche_duree):
     # Exécution de la requête
-    df_tranche_trajets = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_tranche_duree,
-        properties=connection_properties
-    )
+    df_tranche_trajets = pd.read_sql(query_tranche_duree, engine)
     return (df_tranche_trajets,)
 
 
 @app.cell
 def _(df_tranche_trajets):
     # Vérification de l'exécution 
-    df_tranche_trajets.printSchema()
+    print(df_tranche_trajets.dtypes)
     print("Nombre de colonnes/lignes DataFrame : ", len(df_tranche_trajets.columns), "/", df_tranche_trajets.count())
     df_tranche_trajets.head(5)
     return
@@ -241,34 +210,28 @@ def _(df_tranche_trajets):
 
 @app.cell
 def _(df_tranche_trajets):
-    df_pd_tranche_trajets = df_tranche_trajets.toPandas()
-    return (df_pd_tranche_trajets,)
-
-
-@app.cell
-def _(df_pd_tranche_trajets):
     # Conversion en pourcentage du nb tranche
-    df_pd_tranche_trajets["prct_trajets"] = round(df_pd_tranche_trajets["nb_trajets"] / sum(df_pd_tranche_trajets["nb_trajets"]) * 100, 2)
+    df_tranche_trajets["prct_trajets"] = round(df_tranche_trajets["nb_trajets"] / sum(df_tranche_trajets["nb_trajets"]) * 100, 2)
     return
 
 
 @app.cell
-def _(df_pd_tranche_trajets):
-    df_pd_tranche_trajets.head()
+def _(df_tranche_trajets):
+    df_tranche_trajets.head()
     return
 
 
 @app.cell
-def _(df_pd_tranche_trajets):
-    liste_tranche = list(df_pd_tranche_trajets["tranche_duree"])
+def _(df_tranche_trajets):
+    liste_tranche = list(df_tranche_trajets["tranche_duree"])
     return (liste_tranche,)
 
 
 @app.cell
-def _(df_pd_tranche_trajets, liste_tranche, plt):
+def _(df_tranche_trajets, liste_tranche, plt):
     # Visuel en barre 
     (
-        plt.ggplot(df_pd_tranche_trajets, plt.aes(x="factor(tranche_duree)", y="prct_trajets")) # Jeu de données
+        plt.ggplot(df_tranche_trajets, plt.aes(x="factor(tranche_duree)", y="prct_trajets")) # Jeu de données
             + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -313,7 +276,6 @@ def _():
     # Requête pour calculer le nombre de trajets selon la tranche de distance 
     # et si un pourboire a été offert
     query_tranche_distance_pourboire = """
-    (
         SELECT
         tranche_trip_distance_km,
         COUNT(id_taxi) AS nb_trajets
@@ -321,66 +283,50 @@ def _():
         WHERE tip_amount > 0
         GROUP BY tranche_trip_distance_km
         ORDER BY tranche_trip_distance_km
-    ) AS q
     """
     return (query_tranche_distance_pourboire,)
 
 
 @app.cell
-def _(
-    connection_properties,
-    jdbc_url,
-    query_tranche_distance_pourboire,
-    spark,
-):
+def _(engine, pd, query_tranche_distance_pourboire):
     # Exécution de la requête
-    df_tranche_distance_pourboire = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_tranche_distance_pourboire,
-        properties=connection_properties
-    )
+    df_tranche_distance_pourboire = pd.read_sql(query_tranche_distance_pourboire, engine)
     return (df_tranche_distance_pourboire,)
 
 
 @app.cell
 def _(df_tranche_distance_pourboire):
     # Vérification de l'exécution 
-    df_tranche_distance_pourboire.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_tranche_distance_pourboire.columns), "/", df_tranche_distance_pourboire.count())
+    print(df_tranche_distance_pourboire.dtypes)
+    print("Nombre de colonnes/lignes DataFrame : ", df_tranche_distance_pourboire.shape)
     df_tranche_distance_pourboire.head(5)
     return
 
 
 @app.cell
 def _(df_tranche_distance_pourboire):
-    df_pd_tranche_distance_pourboire = df_tranche_distance_pourboire.toPandas()
-    return (df_pd_tranche_distance_pourboire,)
-
-
-@app.cell
-def _(df_pd_tranche_distance_pourboire):
     # Conversion en pourcentage
-    df_pd_tranche_distance_pourboire["prct_trajets"] = round(df_pd_tranche_distance_pourboire["nb_trajets"] / sum(df_pd_tranche_distance_pourboire["nb_trajets"]) * 100, 2)
+    df_tranche_distance_pourboire["prct_trajets"] = round(df_tranche_distance_pourboire["nb_trajets"] / sum(df_tranche_distance_pourboire["nb_trajets"]) * 100, 2)
     return
 
 
 @app.cell
-def _(df_pd_tranche_distance_pourboire):
-    df_pd_tranche_distance_pourboire
+def _(df_tranche_distance_pourboire):
+    df_tranche_distance_pourboire
     return
 
 
 @app.cell
-def _(df_pd_tranche_distance_pourboire):
-    liste_tranche_pourboire = list(df_pd_tranche_distance_pourboire["tranche_trip_distance_km"])
+def _(df_tranche_distance_pourboire):
+    liste_tranche_pourboire = list(df_tranche_distance_pourboire["tranche_trip_distance_km"])
     return (liste_tranche_pourboire,)
 
 
 @app.cell
-def _(df_pd_tranche_distance_pourboire, liste_tranche_pourboire, plt):
+def _(df_tranche_distance_pourboire, liste_tranche_pourboire, plt):
     # Visuel en barre 
     (
-        plt.ggplot(df_pd_tranche_distance_pourboire, plt.aes(x="factor(tranche_trip_distance_km)", y="prct_trajets")) # Jeu de données
+        plt.ggplot(df_tranche_distance_pourboire, plt.aes(x="factor(tranche_trip_distance_km)", y="prct_trajets")) # Jeu de données
             + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -408,7 +354,7 @@ def _(mo):
     mo.md(r"""
     ### **Commentaire :**
 
-    Comme on peut le voir ci-dessus, les longs trajets ne rapportent pas forcément plus de pourboires. C'est même l'inverse, elle apporte beaucoup par rapport aux autres avec une différence supérieure à plus de **10%**.
+    Comme on peut le voir ci-dessus, les longs trajets ne rapportent pas forcément plus de pourboires. C'est même l'inverse, Il y a moins de pourboire par rapport aux autres avec une différence supérieure à plus de **10%**.
     """)
     return
 
@@ -425,7 +371,6 @@ def _(mo):
 def _():
     # Requête pour avoir les 10 heures où le nombre de trajets est le plus élevé
     query_top_10_heures_chargees = """
-    (
         SELECT
         pickup_hour,
         COUNT(id_taxi) AS nb_trajets
@@ -433,48 +378,37 @@ def _():
         GROUP BY pickup_hour
         ORDER BY nb_trajets DESC
         LIMIT 10
-    ) AS q
     """
     return (query_top_10_heures_chargees,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_top_10_heures_chargees, spark):
+def _(engine, pd, query_top_10_heures_chargees):
     # Exécution de la requête
-    df_top_10_heures = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_top_10_heures_chargees,
-        properties=connection_properties
-    )
+    df_top_10_heures = pd.read_sql(query_top_10_heures_chargees, engine)
     return (df_top_10_heures,)
 
 
 @app.cell
 def _(df_top_10_heures):
     # Vérification de l'exécution 
-    df_top_10_heures.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_top_10_heures.columns), "/", df_top_10_heures.count())
+    print(df_top_10_heures.dtypes)
+    print("Nombre de colonnes/lignes DataFrame : ", df_top_10_heures.shape)
     df_top_10_heures.head(10)
     return
 
 
 @app.cell
 def _(df_top_10_heures):
-    df_top_10_heures_pd = df_top_10_heures.toPandas()
-    return (df_top_10_heures_pd,)
-
-
-@app.cell
-def _(df_top_10_heures_pd):
-    liste_top_10_heures = list(df_top_10_heures_pd["pickup_hour"])
+    liste_top_10_heures = list(df_top_10_heures["pickup_hour"])
     return (liste_top_10_heures,)
 
 
 @app.cell
-def _(df_top_10_heures_pd, liste_top_10_heures, plt):
+def _(df_top_10_heures, liste_top_10_heures, plt):
     # Visuel en barre 
     (
-        plt.ggplot(df_top_10_heures_pd, plt.aes(x="factor(pickup_hour)", y="nb_trajets")) # Jeu de données
+        plt.ggplot(df_top_10_heures, plt.aes(x="factor(pickup_hour)", y="nb_trajets")) # Jeu de données
             + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -517,7 +451,6 @@ def _(mo):
 @app.cell
 def _():
     query_indicateurs_quantitatives_pourboire = """
-    (
     SELECT
         tranche_trip_distance_km,
 
@@ -533,32 +466,22 @@ def _():
     WHERE prct_pourboire IS NOT NULL
     GROUP BY tranche_trip_distance_km
     ORDER BY tranche_trip_distance_km
-    ) AS q
     """
     return (query_indicateurs_quantitatives_pourboire,)
 
 
 @app.cell
-def _(
-    connection_properties,
-    jdbc_url,
-    query_indicateurs_quantitatives_pourboire,
-    spark,
-):
+def _(engine, pd, query_indicateurs_quantitatives_pourboire):
     # Exécution de la requête
-    df_indicateurs_quantitatives_pourboire = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_indicateurs_quantitatives_pourboire,
-        properties=connection_properties
-    )
+    df_indicateurs_quantitatives_pourboire = pd.read_sql(query_indicateurs_quantitatives_pourboire, engine)
     return (df_indicateurs_quantitatives_pourboire,)
 
 
 @app.cell
 def _(df_indicateurs_quantitatives_pourboire):
     # Vérification de l'exécution 
-    df_indicateurs_quantitatives_pourboire.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_indicateurs_quantitatives_pourboire.columns), "/", df_indicateurs_quantitatives_pourboire.count())
+    print(df_indicateurs_quantitatives_pourboire.dtypes)
+    print("Nombre de colonnes/lignes DataFrame : ", df_indicateurs_quantitatives_pourboire.shape)
     df_indicateurs_quantitatives_pourboire.head(5)
     return
 
@@ -567,36 +490,19 @@ def _(df_indicateurs_quantitatives_pourboire):
 def _():
     # Calcul de la corrélation linéaire de Pearson afin de voir s'il y a une corrélation linéaire
     query_pearson_distance_pourboire = """
-    (
     SELECT
         CORR(prct_pourboire, trip_distance_km) AS corr_pearson
     FROM public.fact_taxi_trips
     WHERE prct_pourboire IS NOT NULL
       AND trip_distance_km IS NOT NULL
-    ) AS q
     """
     return (query_pearson_distance_pourboire,)
 
 
 @app.cell
-def _(
-    connection_properties,
-    jdbc_url,
-    query_pearson_distance_pourboire,
-    spark,
-):
+def _(engine, pd, query_pearson_distance_pourboire):
     # Exécution de la requête
-    df_corr_pearson = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_pearson_distance_pourboire,
-        properties=connection_properties
-    ).head()
-    return (df_corr_pearson,)
-
-
-@app.cell
-def _(df_corr_pearson):
-    df_corr_pearson
+    pd.read_sql(query_pearson_distance_pourboire, engine).head()
     return
 
 
@@ -640,7 +546,6 @@ def _(mo):
 def _():
     # Récupérer la température moyenne pour les heures les plus chargés
     query_top_10_heures_chargees_moyenne_temperature = """
-    (
         SELECT
         f.pickup_hour,
         COUNT(f.id_taxi) AS nb_trajets,
@@ -651,47 +556,31 @@ def _():
         GROUP BY f.pickup_hour
         ORDER BY nb_trajets DESC
         LIMIT 10
-    ) AS q
     """
     return (query_top_10_heures_chargees_moyenne_temperature,)
 
 
 @app.cell
-def _(
-    connection_properties,
-    jdbc_url,
-    query_top_10_heures_chargees_moyenne_temperature,
-    spark,
-):
+def _(engine, pd, query_top_10_heures_chargees_moyenne_temperature):
     # Exécution de la requête
-    df_top_10_heures_temperature = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_top_10_heures_chargees_moyenne_temperature,
-        properties=connection_properties
-    )
+    df_top_10_heures_temperature = pd.read_sql(query_top_10_heures_chargees_moyenne_temperature, engine)
     return (df_top_10_heures_temperature,)
 
 
 @app.cell
-def _(df_indicateurs_quantitatives_pourboire, df_top_10_heures_temperature):
+def _(df_top_10_heures_temperature):
     # Vérification de l'exécution 
-    df_top_10_heures_temperature.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_indicateurs_quantitatives_pourboire.columns), "/", df_top_10_heures_temperature.count())
+    print(df_top_10_heures_temperature.dtypes)
+    print("Nombre de colonnes/lignes DataFrame : ", df_top_10_heures_temperature.shape)
     df_top_10_heures_temperature.head(10)
     return
 
 
 @app.cell
-def _(df_top_10_heures_temperature):
-    df_top_10_heures_temperature_pd = df_top_10_heures_temperature.toPandas()
-    return (df_top_10_heures_temperature_pd,)
-
-
-@app.cell
-def _(df_top_10_heures_temperature_pd, liste_top_10_heures, plt):
+def _(df_top_10_heures_temperature, liste_top_10_heures, plt):
     # Visuel en barre 
     (
-        plt.ggplot(df_top_10_heures_temperature_pd, plt.aes(x="factor(pickup_hour)", y="moyenne_temperature")) # Jeu de données
+        plt.ggplot(df_top_10_heures_temperature, plt.aes(x="factor(pickup_hour)", y="moyenne_temperature")) # Jeu de données
             + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -726,63 +615,62 @@ def _(mo):
 def _():
     # Récupérer pour chaque date et heure, le nombre de trajets, l'humidité et la vitesse du vent
     query_vent_pluie_trajet = """
-    (
         SELECT
         f.pickup_date,
         f.pickup_hour,
         COUNT(f.id_taxi) AS nb_trajets,
         AVG(d.humidity_pct) AS moyenne_humidite_pct,
         AVG(d.wind_speed_ms) AS moyenne_vitesse_vent
-    
+
         FROM fact_taxi_trips f
         LEFT JOIN dim_weather d
         ON d.measure_hour = f.pickup_hour
         GROUP BY f.pickup_hour, f.pickup_date
-    ) AS q
     """
     return (query_vent_pluie_trajet,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_vent_pluie_trajet, spark):
+def _(engine, pd, query_vent_pluie_trajet):
     # Exécution de la requête
-    df_vent_pluie = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_vent_pluie_trajet,
-        properties=connection_properties
-    )
+    df_vent_pluie = pd.read_sql(query_vent_pluie_trajet, engine)
     return (df_vent_pluie,)
 
 
 @app.cell
 def _(df_vent_pluie):
     # Vérification de l'exécution 
-    df_vent_pluie.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_vent_pluie.columns), "/", df_vent_pluie.count())
+    print(df_vent_pluie.dtypes)
+    print("Nombre de lignes/colonnes DataFrame : ", df_vent_pluie.shape)
     df_vent_pluie.head(10)
     return
 
 
 @app.cell
-def _(F, df_vent_pluie):
-    # Calcul de la corrélation linéaire de Pearson
-    df_vent_pluie.select(
-        F.corr("nb_trajets", "moyenne_humidite_pct").alias("corr_humidite"),
-        F.corr("nb_trajets", "moyenne_vitesse_vent").alias("corr_vent")
-    ).show()
+def _(df_vent_pluie):
+    # Calcul des corrélations de Pearson avec pandas
+    corr_humidite = df_vent_pluie["nb_trajets"].corr(
+        df_vent_pluie["moyenne_humidite_pct"]
+    )
+
+    corr_vent = df_vent_pluie["nb_trajets"].corr(
+        df_vent_pluie["moyenne_vitesse_vent"]
+    )
+
+    return corr_humidite, corr_vent
+
+
+@app.cell
+def _(corr_humidite, corr_vent):
+    print(f"Corrélation humidité : {corr_humidite}")
+    print(f"Corrélation vent : {corr_vent}")
     return
 
 
 @app.cell
-def _(df_vent_pluie):
-    df_vent_pluie_pd = df_vent_pluie.toPandas()
-    return (df_vent_pluie_pd,)
-
-
-@app.cell
-def _(df_vent_pluie_pd, plt):
+def _(df_vent_pluie, plt):
     (
-        plt.ggplot(df_vent_pluie_pd, plt.aes(x="moyenne_humidite_pct", y="nb_trajets"))
+        plt.ggplot(df_vent_pluie, plt.aes(x="moyenne_humidite_pct", y="nb_trajets"))
         + plt.geom_point(alpha=0.6)
         + plt.geom_smooth(method="lm", se=True)  # régression linéaire
         + plt.labs(
@@ -798,9 +686,9 @@ def _(df_vent_pluie_pd, plt):
 
 
 @app.cell
-def _(df_vent_pluie_pd, plt):
+def _(df_vent_pluie, plt):
     (
-        plt.ggplot(df_vent_pluie_pd, plt.aes(x="moyenne_vitesse_vent", y="nb_trajets"))
+        plt.ggplot(df_vent_pluie, plt.aes(x="moyenne_vitesse_vent", y="nb_trajets"))
         + plt.geom_point(alpha=0.6)
         + plt.geom_smooth(method="lm", se=True)  # régression linéaire
         + plt.labs(
@@ -835,51 +723,33 @@ def _(mo):
 def _():
     # Récupérer les calculs réalisées dans la table de dimension trip_summary_per_hour
     query_trip_summary_per_hour = """
-    (
         SELECT *
         FROM marts.trip_summary_per_hour
-    ) AS q
     """
     return (query_trip_summary_per_hour,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_trip_summary_per_hour, spark):
+def _(engine, pd, query_trip_summary_per_hour):
     # Exécution de la requête
-    df_distance_temps = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_trip_summary_per_hour,
-        properties=connection_properties
-    )
+    df_distance_temps = pd.read_sql(query_trip_summary_per_hour, engine)
     return (df_distance_temps,)
 
 
 @app.cell
 def _(df_distance_temps):
     # Vérification de l'exécution 
-    df_distance_temps.printSchema()
-    print("Nombre de colonnes/lignes DataFrame : ", len(df_distance_temps.columns), "/", df_distance_temps.count())
+    print(df_distance_temps.dtypes)
+    print("Nombre de lignes/colonnes DataFrame : ", df_distance_temps.shape)
     df_distance_temps.head(10)
     return
 
 
 @app.cell
-def _(df_distance_temps):
-    df_distance_temps_pd = df_distance_temps.toPandas()
-    return (df_distance_temps_pd,)
-
-
-@app.cell
-def _(df_distance_temps_pd):
-    df_distance_temps_pd
-    return
-
-
-@app.cell
-def _(df_distance_temps_pd, plt):
+def _(df_distance_temps, plt):
     # Le nombre de trajets selon l'heure de prise en charge et la météo
     (
-        plt.ggplot(df_distance_temps_pd, plt.aes(x="pickup_hour", y="trips_count"))
+        plt.ggplot(df_distance_temps, plt.aes(x="pickup_hour", y="trips_count"))
          + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -906,10 +776,10 @@ def _(df_distance_temps_pd, plt):
 
 
 @app.cell
-def _(df_distance_temps_pd, plt):
+def _(df_distance_temps, plt):
     # La durée moyenne du trajet en minute selon l'heure de prise en charge et la météo
     (
-        plt.ggplot(df_distance_temps_pd, plt.aes(x="pickup_hour", y="avg_trip_duration_min"))
+        plt.ggplot(df_distance_temps, plt.aes(x="pickup_hour", y="avg_trip_duration_min"))
          + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -937,10 +807,10 @@ def _(df_distance_temps_pd, plt):
 
 
 @app.cell
-def _(df_distance_temps_pd, plt):
+def _(df_distance_temps, plt):
     # La durée moyenne du trajet en minute selon l'heure de prise en charge et la météo
     (
-        plt.ggplot(df_distance_temps_pd, plt.aes(x="pickup_hour", y="avg_tip_amount"))
+        plt.ggplot(df_distance_temps, plt.aes(x="pickup_hour", y="avg_tip_amount"))
          + plt.geom_bar(color="black",
                            fill="blue",
                            stat="identity") # Ajout du type de graphique avec couleur des bordures + barres
@@ -979,22 +849,16 @@ def _(mo):
 def _():
     # Requête pour récupérer les indicateurs numériques de passenger_count
     query_high_value_customers = """
-    (
         SELECT *
         FROM marts.high_value_customers
-    ) AS q
     """
     return (query_high_value_customers,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_high_value_customers, spark):
+def _(engine, pd, query_high_value_customers):
     # Exécution de la requête
-    spark.read.jdbc(
-        url=jdbc_url,
-        table=query_high_value_customers,
-        properties=connection_properties
-    ).show()
+    pd.read_sql(query_high_value_customers, engine).head()
     return
 
 
@@ -1010,7 +874,6 @@ def _(mo):
 def _():
     # Requête pour récupérer les indicateurs numériques de passenger_count
     query_pourboire_meteo = """
-    (
         SELECT 
             weather_description,
             AVG(prct_pourboire) AS moyenne_pourboire_prct,
@@ -1019,35 +882,23 @@ def _():
         FROM marts.trip_enriched
         WHERE weather_description IS NOT NULL
         GROUP BY weather_description
-    ) AS q
     """
     return (query_pourboire_meteo,)
 
 
 @app.cell
-def _(connection_properties, jdbc_url, query_pourboire_meteo, spark):
+def _(engine, pd, query_pourboire_meteo):
     # Exécution de la requête
-    df_pourboire_meteo = spark.read.jdbc(
-        url=jdbc_url,
-        table=query_pourboire_meteo,
-        properties=connection_properties
-    )
+    df_pourboire_meteo = pd.read_sql(query_pourboire_meteo, engine)
     return (df_pourboire_meteo,)
 
 
 @app.cell
 def _(df_pourboire_meteo):
     # Vérification de l'exécution 
-    df_pourboire_meteo.printSchema()
+    print(df_pourboire_meteo.dtypes)
     print("Nombre de colonnes/lignes DataFrame : ", len(df_pourboire_meteo.columns), "/", df_pourboire_meteo.count())
     df_pourboire_meteo.head(10)
-    return
-
-
-@app.cell
-def _(spark):
-    # Arrêter la session Spark
-    spark.stop()
     return
 
 

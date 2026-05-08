@@ -10,7 +10,7 @@ dependencies = [
     "pandas>=3.0.2",
     "plotnine>=0.15.3",
     "psycopg2-binary>=2.9.12",
-    "pyspark>=4.1.1",
     "requests>=2.33.1",
     "seaborn>=0.13.2",
+    "sqlalchemy>=2.0.49",
 ]

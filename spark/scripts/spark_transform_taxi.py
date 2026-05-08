@@ -40,7 +40,7 @@ def create_spark_session() -> SparkSession:
         .config("spark.hadoop.fs.s3a.aws.credentials.provider",
                 "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
         .config("spark.hadoop.fs.s3a.connection.maximum",     "200")
-        .config("spark.jars",          "/opt/airflow/scripts/postgresql-42.7.3.jar")
+        .config("spark.jars",          "/opt/spark/scripts/postgresql-42.7.3.jar")
         .config("spark.jars.packages",
                 "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262")
         .getOrCreate()

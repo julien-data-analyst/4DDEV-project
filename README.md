@@ -381,3 +381,4 @@ Exemple de résultat obtenu :
 
 # Conclusion
 
+Executing task: docker exec -it 2300c903a48716fcefd1f9263ba83517216d86a6c6368e7409246958beab3dfc bash 

@@ -11,5 +11,7 @@ SELECT
     avg(trips.tip_amount) as avg_tip_amount
 
 FROM {{ source('public', 'fact_taxi_trips') }} AS trips 
-INNER JOIN {{ source('public', 'dim_weather') }} AS weather ON weather.date_measure = trips.pickup_date
+INNER JOIN {{ source('public', 'dim_weather') }} AS weather 
+ON weather.date_measure = trips.pickup_date
+AND trips.pickup_hour = weather.measure_hour
 GROUP BY trips.pickup_hour, weather.weather_description

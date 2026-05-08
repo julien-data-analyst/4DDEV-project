@@ -76,7 +76,8 @@ WHERE schemaname = 'public';
 SELECT w.id_weather, t.id_taxi, t.pickup_date, w.date_measure FROM public.fact_taxi_trips t
 INNER JOIN dim_weather w
 ON t.pickup_date = w.date_measure
-AND t.pickup_hour = w.measure_hour;
+AND t.pickup_hour = w.measure_hour
+LIMIT 10;
 
 -- Export CSV pour gérer plus facilement les parties DBT
 -- COPY public.dim_weather TO '/tmp/dim_weather.csv' WITH CSV HEADER;

@@ -16,7 +16,7 @@ SELECT DISTINCT
     w.weather_main
 FROM {{ source('public', 'fact_taxi_trips') }} t
 LEFT JOIN {{ source('public', 'dim_weather') }} w
-    ON t.pickup_date = w.date_measure
+    ON t.pickup_date = w.date_measure AND t.pickup_hour = w.measure_hour
 {% if is_incremental() %}
-WHERE t.pickup_datetime > (SELECT MAX(t.pickup_datetime) FROM {{ this }})
+WHERE t.pickup_datetime > (SELECT MAX(pickup_datetime) FROM {{ this }})
 {% endif %}
