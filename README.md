@@ -2,13 +2,13 @@
 ## Auteur : Julien RENOULT - Tom JOUSSET - Béatrice BEAVOGUI - Mamadou-alpha DIALLO
 ## Promo : SUPINFO Programme Grande École 4ème année
 ### Spécialité : Ingénierie Data
-### Date : 01/05/2026 - 05/06/2026
+### Date : 01/05/2026 - 08/06/2026
 
 # Introduction
 
 Dans le cadre du projet, nous devions construire une architecture data pour la collecte et l'analyse des voyages de taxis à New York City et la météo associée.
 
-Pour présenter ce projet, nous allons d'abord vous présenter les technologies utilisées, ensuite les pré-requis pour pouvoir lancer l'architecture et pour finir ceux que nous avons faits pour chaque partie.
+Pour présenter ce projet, nous allons d'abord vous présenter les technologies utilisées, ensuite les pré-requis pour pouvoir lancer l'architecture, l'utilisation de notre architecture (comment le déployer), la collecte de données, les transformations appliquées, les modèles dbt analytiques créés et enfin l'analyse des données par marimo.
 
 # Technologies utilisées  (Installation/Déploiement)
 
@@ -365,6 +365,12 @@ Il permet d’identifier les groupes de passagers les plus rentables selon leur 
 
 ## Exécution dbt
 
+Pour exécuter les modèles dbt, nous demandons d'abord que les tables soient créées avec des données afin de bien procéder à la création 
+de nos modèles analytiques. Pour se connecter au conteneur dbt via un terminal, il faut utiliser cette commande :
+```sh
+docker exec
+```
+
 Les modèles sont exécutés avec la commande :
 
 ```sh
@@ -381,3 +387,34 @@ Exemple de résultat obtenu :
 
 # Conclusion
 
+# Pré-requis pour windows
+
+Build d'abord les images dbt/marimo (build entre 5 et 10 minutes dû à la librairie pyspark à installer) :
+
+```sh
+docker compose -f docker-compose-dev-prod.yaml up --build marimo dbt
+```
+
+Build ensuite les images spark-master/spark-worker/minio/postgres (build entre 1 et 4 minutes) :
+
+```sh
+docker compose -f docker-compose-dev-prod.yaml up --build postgres minio spark-master spark-worker
+```
+
+Build enfin les images airflow (build entre 10 et 15 minutes) :
+
+```sh
+docker compose -f docker-compose-dev-prod.yaml up --build airflow-init airflow-webserver airflow-scheduler
+```
+
+Mettre cette config s'il vous plaît pour le WSL :
+
+```
+[wsl2]
+memory=16GB
+processors=8
+swap=8GB
+localhostForwarding=true
+vmIdleTimeout=0
+sparseVhd=true
+```

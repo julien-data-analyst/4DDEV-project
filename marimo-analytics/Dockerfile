@@ -1,7 +1,6 @@
 # Image officielle de Python
 FROM python:3.11-slim
 
-
 # 🔥 Recréer des sources Debian stables + installer Java
 RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list && \
     echo "deb http://deb.debian.org/debian bookworm-updates main" >> /etc/apt/sources.list && \
@@ -22,11 +21,6 @@ ENV PATH="/code/.venv/bin:$PATH"
 # Configuration de l'environnement Python
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-# Installer uv
-COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
-ENV UV_SYSTEM_PYTHON=1
-ENV PATH="/code/.venv/bin:$PATH"
 
 # Créer le dossier de travail
 WORKDIR /code

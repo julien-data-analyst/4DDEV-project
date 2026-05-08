@@ -7,12 +7,19 @@ x-airflow-common: &airflow-common
   environment: 
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${AIRFLOW_DB}
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:  postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${AIRFLOW_DB}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+    AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: '1'    # Évite la surcharge simultanée
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: '4'   # Limite le parallélisme par DAG
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '120'    # DAGs lourds = plus de temps de parse
+    AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_PRE_PING: 'true'   # ← détecte les connexions mortes
+    AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_RECYCLE: 1800
+    AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE: 5
+    
     # Connexions Minio / S3
     AIRFLOW_CONN_MINIO_DEFAULT: s3://${DATALAKE_USER}:${DATALAKE_PASSWORD}@minio:9000
 
@@ -29,6 +36,9 @@ x-airflow-common: &airflow-common
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     SPARK_HOME: /opt/spark
     PYTHONPATH: /opt/airflow/dags:/opt/airflow/scripts
+    AIRFLOW__WEBSERVER__WORKERS: '2'               # Gunicorn : 2 workers suffisent
+    AIRFLOW__WEBSERVER__WORKER_TIMEOUT: '120'
+    AIRFLOW__WEBSERVER__WORKER_REFRESH_BATCH_SIZE: '1'
 
   volumes:
     - spark_home:/opt/spark 
@@ -110,17 +120,12 @@ services:
       start_period: 30s
     ports:
       - "5434:5432"
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d  # scripts SQL d'init (multi-DB)
     networks:
       - data-net
-
+      
   # ─────────────────────────────────────────────
   #  Marimo analytique
   # ─────────────────────────────────────────────
@@ -212,11 +217,6 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
     networks:
       - data-net
 
@@ -235,11 +235,6 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1.5G
     networks:
       - data-net
 
@@ -261,11 +256,6 @@ services:
       - "8084:8080"   # UI Spark
     networks:
       - data-net
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
 
   spark-worker:
     build:
@@ -281,11 +271,6 @@ services:
       - "8081:8081"
     networks:
       - data-net
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1.5G
 
 # ─────────────────────────────────────────────
 #  VOLUMES (persistance locale + Docker volumes)
