@@ -52,7 +52,12 @@ log = logging.getLogger(__name__)
 # MINIO CLIENT
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_s3_client():
+def get_s3_client() -> boto3.client:
+    """
+    Fonction : Permet d'avoir le client pour Minio
+
+    Retourne : le client S3 Minio actif
+    """
     return boto3.client(
         "s3",
         endpoint_url=MINIO_ENDPOINT,
@@ -68,6 +73,14 @@ def get_s3_client():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def fetch_weather(lat: float, lon: float) -> Optional[dict]:
+    """
+    Fonction : appel à l'API pour récupérer ses données sur le temps
+
+    Arguments :
+    - lat,lon : latitude et la longitude auquel il faut prendre la mesure
+
+    Retourne : un JSON avec les métriques qui nous intéressent
+    """
     if not OPENWEATHER_API_KEY:
         raise EnvironmentError("OPENWEATHER_API_KEY manquant")
 
@@ -107,6 +120,14 @@ def fetch_weather(lat: float, lon: float) -> Optional[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_s3_key(event: dict) -> str:
+    """
+    Fonction : construction du fichier JSON qui va contenir la mesure
+
+    Argument :
+    - event : le json de la mesure concernée
+
+    Retourne : le chemin pour insérer la mesure dans les dossiers concernés
+    """
     ts = event.get("ingested_at", datetime.utcnow().isoformat())
     dt = datetime.fromisoformat(ts.replace("Z", ""))
     city = event.get("city_id", "unknown")
@@ -118,6 +139,14 @@ def build_s3_key(event: dict) -> str:
 
 
 def store_minio(s3, event: dict):
+    """
+    Fonction : permet de stocket la mesure dans le JSON
+
+    Arguments :
+    - s3 : client s3 permettant d'intéragir avec Minio
+    - event : JSOn de la mesure
+
+    """
     key = build_s3_key(event)
 
     s3.put_object(
@@ -135,6 +164,9 @@ def store_minio(s3, event: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_weather_to_minio():
+    """
+    Fonction : récupère la mesure via l'API et l'insère dans Minio.
+    """
     s3 = get_s3_client()
     count = 0
 

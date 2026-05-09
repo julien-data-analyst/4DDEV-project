@@ -53,6 +53,11 @@ log = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_s3_client() -> boto3.client:
+    """
+    Fonction : Permet d'avoir le client pour Minio
+
+    Retourne : le client S3 Minio actif
+    """
     return boto3.client(
         "s3",
         endpoint_url=MINIO_ENDPOINT,
@@ -71,6 +76,15 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 def iter_months_range(start, end):
+    """
+    Fonction : permet de renvoyer à chaque fois le mois en delta afin qu'il puisse chercher les fichiers parquets
+    entre le début et la fin données en arguments
+
+    Arguments :
+    - start : début d'un mois (en format datetime)
+    - end : fin d'un mois (en format datetime)
+
+    """
     current = start
     while current <= end:
         yield current
@@ -78,14 +92,35 @@ def iter_months_range(start, end):
 
 
 def s3_key(year: int, month: int) -> str:
+    """
+    Fonction : permet d'avoir le chemin pour le fichier parquet
+
+    Arguments :
+    - year : année concernée de ce fichier
+    - month : mois concerné de ce fichier
+    """
     return f"{PREFIX}/{year:04d}/{month:02d}/yellow_tripdata_{year:04d}-{month:02d}.parquet"
 
 
 def metadata_key(year: int, month: int) -> str:
+    """
+    Fonction : permet d'avoir le chemin pour les métadonnées JSON
+
+    Arguments :
+    - year : année concernée de ce fichier
+    - month : mois concerné de ce fichier
+    """
     return f"{PREFIX}/{year:04d}/{month:02d}/_metadata.json"
 
 
 def file_exists_in_minio(s3: boto3.client, key: str) -> bool:
+    """
+    Fonction : permet de vérifier l'existence d'un fichier 
+
+    Arguments :
+    - s3 : client S3 minio
+    - key : chemin du fichier à vérifier
+    """
     try:
         s3.head_object(Bucket=BUCKET, Key=key)
         return True
@@ -97,8 +132,13 @@ def file_exists_in_minio(s3: boto3.client, key: str) -> bool:
 
 def download_and_upload(s3: boto3.client, url: str, bucket: str, key: str) -> int:
     """
-    Télécharge un fichier avec requête HTTP et l'envoie directement dans Minio
+    Fonction : Télécharge un fichier avec requête HTTP et l'envoie directement dans Minio
     via l'API multipart upload. Retourne la taille totale en octets.
+
+    Arguments :
+    - s3 : client S3 minio
+    - url : requête HTTP à exécuter
+    - key : chemin du fichier à sauvegarder avec les données
     """
     log.info("Téléchargement → %s", url)
 
@@ -167,6 +207,16 @@ def download_and_upload(s3: boto3.client, url: str, bucket: str, key: str) -> in
 
 
 def write_metadata(s3: boto3.client, year: int, month: int, size_bytes: int) -> None:
+    """
+    Fonction : Ecriture des métadonnées avec la taille en plus du fichier concerné
+
+    Arguments :
+    - s3 : client S3 minio
+    - year : requête HTTP à exécuter
+    - month : chemin du fichier à sauvegarder avec les données
+    - size_bytes : taille du fichier en bytes
+    
+    """
     meta = {
         "source": f"{BASE_URL}/yellow_tripdata_{year:04d}-{month:02d}.parquet",
         "year": year,

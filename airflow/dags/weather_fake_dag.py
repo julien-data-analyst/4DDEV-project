@@ -35,6 +35,12 @@ MINIO_SECRET_KEY = os.getenv("DATALAKE_PASSWORD", "minio_password_change_me")
 # ─────────────────────────────────────────────
 
 def get_s3():
+    """
+    Fonction : Permet d'avoir le client pour Minio
+
+    Retourne : le client S3 Minio actif
+    """
+     
     return boto3.client(
         "s3",
         endpoint_url=MINIO_ENDPOINT,
@@ -49,6 +55,15 @@ def get_s3():
 # ─────────────────────────────────────────────
 
 def generate_fake_weather(ts: datetime):
+    """
+    Fonction : Permet de générer une mesure aléatoire de météo
+
+    Argument :
+    - ts : temps de la mesure
+
+    Retourne : Mesure JSON fictive
+    """
+
     state = random.choice(WEATHER_STATES)
 
     return {
@@ -67,6 +82,14 @@ def generate_fake_weather(ts: datetime):
 
 
 def store_minio(event):
+    """
+    Fonction : Permet de stocker les données dans Minio
+
+    Argument :
+    - event : événement de la mesure
+
+    Retourne : le client S3 Minio actif
+    """
     s3 = get_s3()
 
     ts = datetime.fromtimestamp(event["timestamp_unix"], tz=timezone.utc)
@@ -89,6 +112,9 @@ def store_minio(event):
 # ─────────────────────────────────────────────
 
 def run_fake_weather():
+    """
+    Fonction : permets de générer des mesures JSON fictives pour l'année 2026 et les insérer dans Minio
+    """
     start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     end = datetime(2026, 4, 30, tzinfo=timezone.utc)
 

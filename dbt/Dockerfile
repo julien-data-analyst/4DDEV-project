@@ -23,7 +23,7 @@ WORKDIR /dbt
 COPY pyproject.toml uv.lock ./
 
 # Installer les dépendances
-RUN uv sync
+RUN uv sync --frozen --no-dev
 
 # Ajouter le venv au PATH
 ENV PATH="/dbt/.venv/bin:$PATH"

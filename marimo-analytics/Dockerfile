@@ -1,33 +1,20 @@
-# Image officielle de Python
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
-
-# 🔥 Recréer des sources Debian stables + installer Java
-RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list && \
-    echo "deb http://deb.debian.org/debian bookworm-updates main" >> /etc/apt/sources.list && \
-    echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
-    apt-get update && \
-    rm -rf /var/lib/apt/lists/*
-
-# Configuration de l'environnement Python
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Installer uv
+# uv uniquement
 COPY --from=ghcr.io/astral-sh/uv:0.4.20 /uv /bin/uv
+
 ENV UV_SYSTEM_PYTHON=1
 ENV PATH="/code/.venv/bin:$PATH"
 
-# Créer le dossier de travail
 WORKDIR /code
 
-# Copier les fichiers projet
 COPY pyproject.toml uv.lock ./
 
-# Installer les dépendances
-RUN uv sync
+RUN uv sync --frozen --no-dev
 
-# Copier le code
 COPY ./scripts/ /code/scripts
 
 CMD ["marimo", "edit", "--no-token", "--host", "0.0.0.0", "-p", "8080"]

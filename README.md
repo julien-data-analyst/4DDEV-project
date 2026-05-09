@@ -2,7 +2,7 @@
 ## Auteur : Julien RENOULT - Tom JOUSSET - Béatrice BEAVOGUI - Mamadou-alpha DIALLO
 ## Promo : SUPINFO Programme Grande École 4ème année
 ### Spécialité : Ingénierie Data
-### Date : 01/05/2026 - 05/06/2026
+### Date : 01/05/2026 - 09/06/2026
 
 # Introduction
 
@@ -147,6 +147,17 @@ Les pipelines sont exécutés automatiquement via Airflow afin d’assurer :
 
 L’ensemble de l’architecture est conteneurisé avec `Docker-Compose` pour faciliter le déploiement et la reproductibilité du projet.
 
+## Exécution de la collecte
+
+Pour exécuter la collecte des données, vous devrez d'abord aller sur l'interface wbe d'airflow via *http://localhost:8082/*. Après avoir accédé à l'interface web en mettant le nom d'utilisateur et le mot de passe (dans le fichier **.env**), vous pouvez lancer les dags de collecte suivantes :
+
+- **collect_taxi_trips_batch** : DAG qui exécute un script de collecte de données sur les fichiers parquet de taxis
+- **collect_taxi_zone_lookup** : DAG qui télécharge le fichier CSV concernant les zones des voyages de taxis
+- **weather_streaming_ingestion_minio** : DAG qui va call l'API toutes les heures pour récupérer le temps actuel et ses métriques
+- **weather_fake_generator_minio** : DAG qui va générer des données aléatoires fictives afin de pouvoir lier avec les données de voyages en taxis et tester nos modèles de notre base 
+
+Vous pouvez vérifier les résultats dans le Datalake **Minio** par le lien suivant *http://localhost:9001*.
+
 # Partie 2 : transformation des données (DAGs Airflow pyspark)
 
 La seconde étape de l’architecture consiste à transformer les données brutes stockées dans MinIO afin de produire des données exploitables pour l’analyse et la modélisation analytique.
@@ -178,6 +189,15 @@ Les données finales sont enregistrées dans la table :
 ```
 public.dim_weather
 ```
+
+### Exécution de la transformation
+
+Pour exécuter les transformations côté météo, nous l'avons fait en deux DAGs pour séparer l'étape de transformation et du chargement dans la base de données :
+
+- **weather_streaming_to_parquet** : DAG qui détecte les nouveaux fichiers JSON, les récupère et transforme les données pour ensuite les envoyer dans le bucket processed où vous trouverez les données préparées en format parquet
+
+- **weather_parquet_to_postgres** : DAG qui détecte les nouveau fichiers de mesures parquet et les chargent dans la base de données PostgreSQL
+
 ## Transformation des données taxi
 
 Les données taxi sont traitées en batch avec PySpark.
@@ -216,6 +236,13 @@ Les données finales sont insérées dans :
 ```
 public.fact_taxi_trips
 ```
+
+## Exécution de la transformation
+
+Pour exécuter les transformations sur les voyages de taxis, nous avons créé un DAG qui fait la transformation et le chargement dans la base de données :
+
+- **taxi_trips_spark_batch** : DAG qui récupère les fichiers parquets et les traitent par lot via Spark. Après transformation des données, il les chargera dans la base de données
+
 ## Architecture technique
 
 Les traitements utilisent :
@@ -258,7 +285,8 @@ Plusieurs DAGs assurent l’alimentation du Data Lake MinIO :
 Les transformations sont également pilotées par Airflow :
 
 - `taxi_trips_spark_batch` : lance un job Spark batch pour transformer les fichiers Parquet taxi et alimenter la table `fact_taxi_trips`.
-- `weather_streaming_pipeline` : génère des données météo fictives puis lance un job Spark Structured Streaming pour alimenter la table `dim_weather`.
+- `weather_streaming_to_parquet` : lance un job Spark Streaming pour détecter les nouvelles données, les transformer et les insérer dans le bucket `processed`.
+- `weather_parquet_to_postgres` : lance un job Spark Streaming pour détecter les nouvelles mesures transformées et alimenter la table `dim_weather` via ces données.
 
 Les jobs Spark sont exécutés avec `spark-submit` via des `BashOperator`, tandis que les scripts Python de collecte utilisent des `PythonOperator`.
 
@@ -365,11 +393,24 @@ Il permet d’identifier les groupes de passagers les plus rentables selon leur 
 
 ## Exécution dbt
 
-Les modèles sont exécutés avec la commande :
+Avant d'exécuter les modèles **dbt**, nous vous conseillons de créer les index pour les tables SQL dont vous trouverez les commandes dans le script **create_dwh_tables.sql**. Cela baissera fortement le temps d'exécution pour certains modèles.
+
+Pour exécuter les modèles **dbt**, il faut d'abord se connecter au terminal du conteneur :
 
 ```sh
-dbt run
+docker exec -it 4ddev-project-dbt-1 bash
 ```
+
+Ensuite, exécuter les commandes suivantes dans le terminal du conteneur :
+
+```sh
+
+cd analytics
+
+uv run dbt run
+
+```
+
 Exemple de résultat obtenu :
 ```
 1 of 3 OK created sql table model marts.high_value_customers
@@ -378,7 +419,5 @@ Exemple de résultat obtenu :
 ```
 # Partie 4 : analyse par notebook marimo des visuels sur les tables analytiques
 
-
-# Conclusion
-
-Executing task: docker exec -it 2300c903a48716fcefd1f9263ba83517216d86a6c6368e7409246958beab3dfc bash 
+Pour répondre aux questions demandées dans le projet, un notebook **Marimo** a été créé pour cette analyse.
+Vous pouvez y accéder via le lien *http://localhost:8080/* et accéder au notebook nommé **analyse_exploratoire.py**.

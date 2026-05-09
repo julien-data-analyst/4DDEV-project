@@ -134,5 +134,7 @@ def main():
 
     query.awaitTermination(timeout=300)
     
+    log.info("Streaming météo terminé proprement.")
+
 if __name__ == "__main__":
     main()
