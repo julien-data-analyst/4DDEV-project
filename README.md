@@ -30,6 +30,18 @@ Pour pouvoir faire fonctionner architecture, nous demandons que Docker Desktop o
 
 Si vous avez installé **Docker**, vous pouvez passer à la suite de cette documentation.
 
+Si vous êtes sous **WSL**, utiliser la config suivante dans le fichier *.wslconfig* :
+
+```
+[wsl2]
+memory=16GB
+processors=8
+swap=8GB
+localhostForwarding=true
+vmIdleTimeout=0
+sparseVhd=true
+```
+
 # Utilisation de l'architecture
 
 Pour utiliser notre architecture sans le *hot reload*, vous devez utiliser le **docker-compose-dev-prod.yaml**. Pour ce faire, vous devez utiliser les commandes ci-dessous :

@@ -7,3 +7,4 @@ airflow/*/__pycache__
 docker-compose-exemple.yml
 env.example
 dbt/logs
+.wslconfig
